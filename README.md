@@ -51,4 +51,4 @@ CREATE TABLE inventory (
 ```
 
 I open my folder in notebook to veryfy delimiters. It is semicolon ; 
-Import data -> 
+Import data -> Format - CSV, Encoding - UTF8
