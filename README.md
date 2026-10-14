@@ -64,4 +64,17 @@ FROM sales_orders;
 
 As we can see, the data requires deduplication. 
 
+```
+CREATE VIEW dedup_orders AS
+WITH dedup_orders AS (
+    SELECT *,
+       ROW_NUMBER() OVER ( PARTITION BY order_id
+	   ORDER BY order_id
+    ) AS rn
+    FROM sales_orders
+)
+SELECT *
+FROM dedup_orders
+WHERE rn = 1;
+```
 
