@@ -17,7 +17,18 @@ After
 PostgreSQL:
 
 Create database Retail_fashion
-ALT + SHIFT + N Create Table
+
+CREATE TABLE sales_orders (
+    order_id INT,
+    order_date DATE,
+    customer_id INT,
+    country VARCHAR(50),
+    product_id INT,
+    quantity INT,
+    unit_price NUMERIC(10,2),
+    discount_pct NUMERIC(10,2),
+    status VARCHAR(20)
+);
 
 I open my folder in notebook to veryfy delimiters. It is semicolon ; 
 Import data -> 
