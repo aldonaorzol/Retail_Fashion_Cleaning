@@ -18,6 +18,7 @@ PostgreSQL:
 
 Create database Retail_fashion
 
+`
 CREATE TABLE sales_orders (
     order_id INT,
     order_date DATE,
@@ -29,6 +30,7 @@ CREATE TABLE sales_orders (
     discount_pct NUMERIC(10,2),
     status VARCHAR(20)
 );
+`
 
 I open my folder in notebook to veryfy delimiters. It is semicolon ; 
 Import data -> 
