@@ -52,3 +52,16 @@ CREATE TABLE inventory (
 
 I open my folder in notebook to veryfy delimiters. It is semicolon ; 
 Import data -> Format - CSV, Encoding - UTF8
+
+# Cleaning
+
+### order_id
+```
+SELECT COUNT(order_id) AS all_orders, COUNT(DISTINCT order_id) AS distinct_orders
+FROM sales_orders;
+```
+<img width="242" height="69" alt="image" src="https://github.com/user-attachments/assets/7a5cfaa4-5c58-4e85-b4f9-8d393c126465" />
+
+As we can see, the data requires deduplication. 
+
+
