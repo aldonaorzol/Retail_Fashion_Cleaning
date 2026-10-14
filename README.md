@@ -18,9 +18,10 @@ PostgreSQL:
 
 Create database Retail_fashion
 
-```
+
 Because the dataset is heavily polluted with data quality issues, a staging table with columns stored as TEXT was created to allow the data to be imported successfully.
 
+```
 CREATE TABLE sales_orders (
     order_id TEXT,
     order_date TEXT,
