@@ -33,6 +33,21 @@ CREATE TABLE sales_orders (
     discount_pct TEXT,
     status TEXT
 );
+
+CREATE TABLE products (
+    product_id TEXT,
+    category TEXT,
+    sub_category TEXT,
+    base_price TEXT,
+    launch_date TEXT
+);
+
+CREATE TABLE inventory (
+    product_id TEXT,
+    warehouse_country TEXT,
+    stock_quantity TEXT,
+    last_stock_update TEXT
+);
 ```
 
 I open my folder in notebook to veryfy delimiters. It is semicolon ; 
