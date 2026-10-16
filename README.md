@@ -1,9 +1,7 @@
 
 <h1 align="center">Retail_Fashion_Cleaning</h1>
 
-Sales_orders
-
-Excel:
+### Excel:
 1. Splitting values ​​into columns. 
 Data -> Text to columns -> Comma
 
@@ -15,7 +13,9 @@ After
 
 <img width="688" height="599" alt="image" src="https://github.com/user-attachments/assets/8057c7c8-1bb6-45a5-98f1-876d1c8ec4f1" />
 
-PostgreSQL:
+The pictures present the sales_orders table. I followed the same approach for the other tables. 
+
+### PostgreSQL:
 
 Create database Retail_fashion
 
@@ -54,8 +54,7 @@ CREATE TABLE inventory (
 I open my folder in notebook to veryfy delimiters. It is semicolon ; 
 Import data -> Format - CSV, Encoding - UTF8
 
-# Cleaning
-
+<h2 align="center">Sales_order</h2>
 ### order_id
 ```
 SELECT COUNT(order_id) AS all_orders, COUNT(DISTINCT order_id) AS distinct_orders
