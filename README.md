@@ -56,7 +56,7 @@ Import data -> Format - CSV, Encoding - UTF8
 
 <h2 align="center">Sales_order</h2>
 
-### order_id - Deduplication
+### Deduplication - order_id
 
 ```
 SELECT COUNT(order_id) AS all_orders, COUNT(DISTINCT order_id) AS distinct_orders
@@ -86,4 +86,5 @@ Description:
 * The WHERE rn = 1 filter keeps only the first occurrence of each order.
 * The result is saved as a View named dedup_orders, providing a deduplicated dataset without modifying the original source table.
 
-### order_date - Date Format Standardization
+### Date Format Standardization - order_date
+
