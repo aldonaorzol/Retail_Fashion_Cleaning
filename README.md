@@ -1,4 +1,5 @@
-Data cleaning
+
+<h1 align="center">Retail_Fashion_Cleaning</h1>
 
 Sales_orders
 
@@ -77,4 +78,9 @@ SELECT *
 FROM dedup_orders
 WHERE rn = 1;
 ```
-
+Description:
+Groups records by order_id using PARTITION BY order_id.
+Assigns a sequential number (rn) to each row within the same order_id group using the ROW_NUMBER() function.
+The first occurrence of each order_id receives rn = 1, while subsequent duplicates receive rn = 2, rn = 3, etc.
+The WHERE rn = 1 filter keeps only the first occurrence of each order.
+The result is saved as a View named dedup_orders, providing a deduplicated dataset without modifying the original source table.
