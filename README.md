@@ -51,11 +51,13 @@ CREATE TABLE inventory (
 );
 ```
 
-I open my folder in notebook to veryfy delimiters. It is semicolon ; 
+I opened my folder in notebook to veryfy delimiters. It is semicolon ; 
 Import data -> Format - CSV, Encoding - UTF8
 
 <h2 align="center">Sales_order</h2>
-### order_id
+
+### order_id - Deduplication
+
 ```
 SELECT COUNT(order_id) AS all_orders, COUNT(DISTINCT order_id) AS distinct_orders
 FROM sales_orders;
@@ -78,8 +80,8 @@ FROM dedup_orders
 WHERE rn = 1;
 ```
 Description:
-Groups records by order_id using PARTITION BY order_id.
-Assigns a sequential number (rn) to each row within the same order_id group using the ROW_NUMBER() function.
-The first occurrence of each order_id receives rn = 1, while subsequent duplicates receive rn = 2, rn = 3, etc.
-The WHERE rn = 1 filter keeps only the first occurrence of each order.
-The result is saved as a View named dedup_orders, providing a deduplicated dataset without modifying the original source table.
+* Groups records by order_id using PARTITION BY order_id.
+* Assigns a sequential number (rn) to each row within the same order_id group using the ROW_NUMBER() function.
+* The first occurrence of each order_id receives rn = 1, while subsequent duplicates receive rn = 2, rn = 3, etc.
+* The WHERE rn = 1 filter keeps only the first occurrence of each order.
+* The result is saved as a View named dedup_orders, providing a deduplicated dataset without modifying the original source table.
