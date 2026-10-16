@@ -85,3 +85,5 @@ Description:
 * The first occurrence of each order_id receives rn = 1, while subsequent duplicates receive rn = 2, rn = 3, etc.
 * The WHERE rn = 1 filter keeps only the first occurrence of each order.
 * The result is saved as a View named dedup_orders, providing a deduplicated dataset without modifying the original source table.
+
+### order_date - Date Format Standardization
