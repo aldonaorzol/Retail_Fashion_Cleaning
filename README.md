@@ -87,38 +87,7 @@ Description:
 * The result is saved as a View named dedup_orders, providing a deduplicated dataset without modifying the original source table.
 
 ### Date Format Standardization - order_date
-
-Dane posiadają różne formaty takie jak YYYY-MM-DD, DD.MM.YYYY oraz błędne dane jak 2024-13-40, 2024-12.
-W celu umożliwienie przeprowadzenia analizy ustandaryzowałam daty do formatu DD.MM.YYYY, w Rekordach gdzie nie było wskazanych dni wstawiłam 1. 
-
-data quality validation
-
-```
-SELECT *,
-    CASE
-        -- DD.MM.YYYY
-        WHEN order_date ~ '^(0[1-9]|[12]\d|3[01])\.(0[1-9]|1[0-2])\.\d{4}$'
-            THEN TO_DATE(order_date, 'DD.MM.YYYY')
-
-        -- DD-MM-YYYY
-        WHEN order_date ~ '^(0[1-9]|[12]\d|3[01])-(0[1-9]|1[0-2])-\d{4}$'
-            THEN TO_DATE(order_date, 'DD-MM-YYYY')
-
-        -- YYYY-MM-DD
-        WHEN order_date ~ '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
-            THEN TO_DATE(order_date, 'YYYY-MM-DD')
-
-        -- YYYY-MM (ustawiamy 1. dzień miesiąca)
-        WHEN order_date ~ '^\d{4}-(0[1-9]|1[0-2])$'
-            THEN TO_DATE(order_date || '-01', 'YYYY-MM-DD')
-
-        -- błędne rekordy (np. 2024-13-40) -> NULL
-        ELSE NULL
-    END AS order_date_val
-FROM dedup_orders;
-```
-
-
+The column is stored as text and appears in various formats, such as YYYY-MM-DD, YYYY/MM/DD, or DD-MM-YYYY. The data also contains invalid dates, for example, 2024-13-40.
 ```
 WITH parsed AS (
     SELECT
@@ -155,3 +124,6 @@ FROM parsed;
 ```
 
 <img width="386" height="76" alt="image" src="https://github.com/user-attachments/assets/99a8de21-86fd-4078-8183-fdcf1527c4ed" />
+
+Description:
+-
