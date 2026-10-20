@@ -1,6 +1,6 @@
 
 <h1 align="center">Retail_Fashion_Cleaning</h1>
-
+h
 ### Excel:
 1. Splitting values ​​into columns. 
 Data -> Text to columns -> Comma
