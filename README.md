@@ -1,6 +1,6 @@
 
 <h1 align="center">Retail_Fashion_Cleaning</h1>
-h
+
 ### Excel:
 1. Splitting values ​​into columns. 
 Data -> Text to columns -> Comma
@@ -88,3 +88,68 @@ Description:
 
 ### Date Format Standardization - order_date
 
+Dane posiadają różne formaty takie jak YYYY-MM-DD, DD.MM.YYYY oraz błędne dane jak 2024-13-40, 2024-12.
+W celu umożliwienie przeprowadzenia analizy ustandaryzowałam daty do formatu DD.MM.YYYY, w Rekordach gdzie nie było wskazanych dni wstawiłam 1. 
+
+data quality validation
+
+```
+SELECT *,
+    CASE
+        -- DD.MM.YYYY
+        WHEN order_date ~ '^(0[1-9]|[12]\d|3[01])\.(0[1-9]|1[0-2])\.\d{4}$'
+            THEN TO_DATE(order_date, 'DD.MM.YYYY')
+
+        -- DD-MM-YYYY
+        WHEN order_date ~ '^(0[1-9]|[12]\d|3[01])-(0[1-9]|1[0-2])-\d{4}$'
+            THEN TO_DATE(order_date, 'DD-MM-YYYY')
+
+        -- YYYY-MM-DD
+        WHEN order_date ~ '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
+            THEN TO_DATE(order_date, 'YYYY-MM-DD')
+
+        -- YYYY-MM (ustawiamy 1. dzień miesiąca)
+        WHEN order_date ~ '^\d{4}-(0[1-9]|1[0-2])$'
+            THEN TO_DATE(order_date || '-01', 'YYYY-MM-DD')
+
+        -- błędne rekordy (np. 2024-13-40) -> NULL
+        ELSE NULL
+    END AS order_date_val
+FROM dedup_orders;
+```
+
+
+```
+WITH parsed AS (
+    SELECT
+        order_date,
+        CASE
+            -- DD.MM.YYYY
+            WHEN order_date ~ '^(0[1-9]|[12]\d|3[01])\.(0[1-9]|1[0-2])\.\d{4}$'
+                THEN TO_DATE(order_date, 'DD.MM.YYYY')
+
+            -- DD-MM-YYYY
+            WHEN order_date ~ '^(0[1-9]|[12]\d|3[01])-(0[1-9]|1[0-2])-\d{4}$'
+                THEN TO_DATE(order_date, 'DD-MM-YYYY')
+
+            -- YYYY-MM-DD
+            WHEN order_date ~ '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
+                THEN TO_DATE(order_date, 'YYYY-MM-DD')
+
+            -- YYYY-MM (1. dzień miesiąca)
+            WHEN order_date ~ '^\d{4}-(0[1-9]|1[0-2])$'
+                THEN TO_DATE(order_date || '-01', 'YYYY-MM-DD')
+
+            ELSE NULL
+        END AS order_date_val
+    FROM dedup_orders
+)
+SELECT
+    COUNT(*)                                                    AS all_values,
+    COUNT(*) FILTER (WHERE order_date_val IS NULL)              AS null_values,
+    ROUND(
+        100.0 * COUNT(*) FILTER (WHERE order_date_val IS NULL) / COUNT(*),
+        2
+    )                                                           AS percentage_of_all_nulls
+FROM parsed;
+```
