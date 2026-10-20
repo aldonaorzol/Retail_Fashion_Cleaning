@@ -153,3 +153,5 @@ SELECT
     )                                                           AS percentage_of_all_nulls
 FROM parsed;
 ```
+
+<img width="386" height="76" alt="image" src="https://github.com/user-attachments/assets/99a8de21-86fd-4078-8183-fdcf1527c4ed" />
