@@ -1,6 +1,7 @@
 
 <h1 align="center">Retail_Fashion_Cleaning</h1>
 
+Tools
 ### Excel:
 1. Splitting values ​​into columns. 
 Data -> Text to columns -> Comma
@@ -126,4 +127,5 @@ FROM parsed;
 <img width="386" height="76" alt="image" src="https://github.com/user-attachments/assets/99a8de21-86fd-4078-8183-fdcf1527c4ed" />
 
 Description:
--
+- I performed a simulation that allowed me to determine what percentage of all records consist of invalid values. As we can see above, this figure is 0.73%. Consequently, I decided to leave them as NULL values ​​and exclude them from the final analysis.
+- 
