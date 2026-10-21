@@ -2,6 +2,13 @@
 
 Tools: PostgreSQL, Microsoft Excel,  Copilot, Claude
 
+### Data Quality
+Assess the quality of the data by checking:
+- Whether there are any missing values.
+- Whether duplicate records exist.
+- Whether the values stored in each column are reasonable (e.g., prices, quantities).
+- Whether the data is consistent across the dataset.
+
 ### Excel:
 1. Splitting values ​​into columns. 
 Data -> Text to columns -> Comma
