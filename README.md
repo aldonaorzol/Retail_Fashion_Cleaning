@@ -2,9 +2,37 @@
 
 Tools: PostgreSQL, Microsoft Excel,  Copilot, Claude
 
+The data in the `sales_orders`, `products`, and `inventory` tables is highly messy. To conduct a sales analysis, I carried out an ETL process to properly prepare the data.
+
 ### Data Quality
 Assess the quality of the data by checking:
 - Whether there are any missing values.
+```
+SELECT *
+FROM sales_orders
+WHERE TRIM(order_id) = ''
+   OR TRIM(customer_id) = ''
+   OR TRIM(order_date) = ''
+   OR TRIM(product_id) = ''
+   OR TRIM(quantity) = ''
+   OR TRIM(unit_price) = '';
+
+SELECT *
+FROM products
+WHERE TRIM(product_id) = ''
+   OR TRIM(category) = ''
+   OR TRIM(sub_category) = ''
+   OR TRIM(base_price) = ''
+   OR TRIM(launch_date) = '';
+
+SELECT *
+FROM inventory
+WHERE TRIM(product_id) = ''
+   OR TRIM(warehouse_country) = ''
+   OR TRIM(stock_quantity) = ''
+   OR TRIM(last_stock_update) = '';
+```
+
 - Whether duplicate records exist.
 - Whether the values stored in each column are reasonable (e.g., prices, quantities).
 - Whether the data is consistent across the dataset.
