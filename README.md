@@ -2,7 +2,7 @@
 
 Tools: PostgreSQL, Microsoft Excel,  Copilot, Claude
 
-The data in the `sales_orders`, `products`, and `inventory` tables is highly messy. To conduct a sales analysis, I carried out an ETL process to properly prepare the data.
+The source data contained numerous data quality issues, including inconsistent formats, duplicate records, missing values, and invalid entries. Using SQL, I performed data profiling, data cleansing, and data validation tasks as part of the ETL workflow to enhance data integrity and prepare the datasets for reliable business analysis and reporting. The process included standardizing country names, validating numerical fields, identifying potential outliers, converting data types, standardizing formats, and verifying consistency across sales, product, and inventory datasets. Additional data quality checks were conducted to ensure data accuracy, completeness, and compliance with business rules.
 
 ### Data Quality
 Assess the quality of the data by checking:
