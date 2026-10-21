@@ -1,12 +1,14 @@
-
 <h1 align="center">Retail_Fashion_Cleaning</h1>
 
-## Tools: PostgreSQL, Microsoft Excel,  Copilot, Claude
+Tools: PostgreSQL, Microsoft Excel,  Copilot, Claude
+
 ### Excel:
 1. Splitting values ​​into columns. 
 Data -> Text to columns -> Comma
 
 Before
+
+
 <img width="793" height="570" alt="image" src="https://github.com/user-attachments/assets/b75342d6-697a-4168-a12b-9e16b9bb3819" />
 
 
