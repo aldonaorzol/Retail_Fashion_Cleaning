@@ -4,38 +4,6 @@ Tools: PostgreSQL, Microsoft Excel,  Copilot, Claude
 
 The source data contained numerous data quality issues, including inconsistent formats, duplicate records, missing values, and invalid entries. Using SQL, I performed data profiling, data cleansing, and data validation tasks as part of the ETL workflow to enhance data integrity and prepare the datasets for reliable business analysis and reporting. The process included standardizing country names, validating numerical fields, identifying potential outliers, converting data types, standardizing formats, and verifying consistency across sales, product, and inventory datasets. Additional data quality checks were conducted to ensure data accuracy, completeness, and compliance with business rules.
 
-### Data Quality
-Assess the quality of the data by checking:
-- Whether there are any missing values.
-```
-SELECT *
-FROM sales_orders
-WHERE TRIM(order_id) = ''
-   OR TRIM(customer_id) = ''
-   OR TRIM(order_date) = ''
-   OR TRIM(product_id) = ''
-   OR TRIM(quantity) = ''
-   OR TRIM(unit_price) = '';
-
-SELECT *
-FROM products
-WHERE TRIM(product_id) = ''
-   OR TRIM(category) = ''
-   OR TRIM(sub_category) = ''
-   OR TRIM(base_price) = ''
-   OR TRIM(launch_date) = '';
-
-SELECT *
-FROM inventory
-WHERE TRIM(product_id) = ''
-   OR TRIM(warehouse_country) = ''
-   OR TRIM(stock_quantity) = ''
-   OR TRIM(last_stock_update) = '';
-```
-
-- Whether duplicate records exist.
-- Whether the values stored in each column are reasonable (e.g., prices, quantities).
-- Whether the data is consistent across the dataset.
 
 ### Excel:
 1. Splitting values ​​into columns. 
@@ -94,7 +62,37 @@ Import data -> Format - CSV, Encoding - UTF8
 
 <h2 align="center">Sales_order</h2>
 
-### Deduplication - order_id
+### Data Quality
+Assess the quality of the data by checking:
+- Whether there are any missing values.
+```
+SELECT *
+FROM sales_orders
+WHERE TRIM(order_id) = ''
+   OR TRIM(customer_id) = ''
+   OR TRIM(order_date) = ''
+   OR TRIM(product_id) = ''
+   OR TRIM(quantity) = ''
+   OR TRIM(unit_price) = '';
+
+SELECT *
+FROM products
+WHERE TRIM(product_id) = ''
+   OR TRIM(category) = ''
+   OR TRIM(sub_category) = ''
+   OR TRIM(base_price) = ''
+   OR TRIM(launch_date) = '';
+
+SELECT *
+FROM inventory
+WHERE TRIM(product_id) = ''
+   OR TRIM(warehouse_country) = ''
+   OR TRIM(stock_quantity) = ''
+   OR TRIM(last_stock_update) = '';
+```
+As a result, I see that the tables do not contain any empty records.
+
+- Whether duplicate records exist.
 
 ```
 SELECT COUNT(order_id) AS all_orders, COUNT(DISTINCT order_id) AS distinct_orders
@@ -102,7 +100,14 @@ FROM sales_orders;
 ```
 <img width="242" height="69" alt="image" src="https://github.com/user-attachments/assets/7a5cfaa4-5c58-4e85-b4f9-8d393c126465" />
 
-As we can see, the data requires deduplication. 
+As we can see, the data requires deduplication.
+  
+- Whether the values stored in each column are reasonable (e.g., prices, quantities).
+
+  quantity has outliner 
+- Whether the data is consistent across the dataset.
+
+### Deduplication - order_id 
 
 ```
 CREATE VIEW dedup_orders AS
