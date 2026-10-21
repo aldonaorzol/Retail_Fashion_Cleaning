@@ -1,7 +1,7 @@
 
 <h1 align="center">Retail_Fashion_Cleaning</h1>
 
-Tools
+## Tools: PostgreSQL, Microsoft Excel,  Copilot, Claude
 ### Excel:
 1. Splitting values ​​into columns. 
 Data -> Text to columns -> Comma
@@ -127,5 +127,7 @@ FROM parsed;
 <img width="386" height="76" alt="image" src="https://github.com/user-attachments/assets/99a8de21-86fd-4078-8183-fdcf1527c4ed" />
 
 Description:
+- To be able to refer back to the first part of the query, I used a CTE.
+- The query standardizes the date format in the column and converts the data type from text to DATE, ensuring data consistency and accuracy for further analysis.
 - I performed a simulation that allowed me to determine what percentage of all records consist of invalid values. As we can see above, this figure is 0.73%. Consequently, I decided to leave them as NULL values ​​and exclude them from the final analysis.
 - 
