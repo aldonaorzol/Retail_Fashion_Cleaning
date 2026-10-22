@@ -90,7 +90,7 @@ WHERE TRIM(product_id) = ''
    OR TRIM(stock_quantity) = ''
    OR TRIM(last_stock_update) = '';
 ```
-As a result, I see that the tables do not contain any empty records.
+My first validation checked for empty strings (= '') and returned 0 rows, even though the source file clearly had missing values. PostgreSQL had converted those blanks to NULL during import.
 
 - Whether duplicate records exist.
 
@@ -134,39 +134,46 @@ The column is stored as text and appears in various formats, such as YYYY-MM-DD,
 ```
 WITH parsed AS (
     SELECT
-        order_date,
         CASE
-            -- DD.MM.YYYY
-            WHEN order_date ~ '^(0[1-9]|[12]\d|3[01])\.(0[1-9]|1[0-2])\.\d{4}$'
-                THEN TO_DATE(order_date, 'DD.MM.YYYY')
-
-            -- DD-MM-YYYY
-            WHEN order_date ~ '^(0[1-9]|[12]\d|3[01])-(0[1-9]|1[0-2])-\d{4}$'
+            -- DD.MM.YYYY lub DD-MM-YYYY
+            WHEN order_date ~ '^(0[1-9]|[12]\d|3[01])[.-](0[1-9]|1[0-2])[.-]\d{4}$'
                 THEN TO_DATE(order_date, 'DD-MM-YYYY')
-
             -- YYYY-MM-DD
             WHEN order_date ~ '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
                 THEN TO_DATE(order_date, 'YYYY-MM-DD')
-
-            -- YYYY-MM (1. dzień miesiąca)
+            -- YYYY-MM
             WHEN order_date ~ '^\d{4}-(0[1-9]|1[0-2])$'
                 THEN TO_DATE(order_date || '-01', 'YYYY-MM-DD')
-
-            ELSE NULL
         END AS order_date_val
     FROM dedup_orders
 )
 SELECT
-    COUNT(*)                                                    AS all_values,
-    COUNT(*) FILTER (WHERE order_date_val IS NULL)              AS null_values,
-    ROUND(
-        100.0 * COUNT(*) FILTER (WHERE order_date_val IS NULL) / COUNT(*),
-        2
-    )                                                           AS percentage_of_all_nulls
+    COUNT(*)                                                      AS all_values,
+    COUNT(*) - COUNT(order_date_val)                              AS null_values,
+    ROUND(100.0 * (COUNT(*) - COUNT(order_date_val)) / COUNT(*), 2) AS percentage_of_all_nulls
 FROM parsed;
 ```
 
 <img width="386" height="76" alt="image" src="https://github.com/user-attachments/assets/99a8de21-86fd-4078-8183-fdcf1527c4ed" />
+
+```
+CREATE VIEW order_date_val AS
+SELECT *,
+    CASE
+        -- DD.MM.YYYY lub DD-MM-YYYY
+        WHEN order_date ~ '^\d{2}[.-]\d{2}[.-]\d{4}$'
+            THEN TO_DATE(order_date, 'DD-MM-YYYY')
+
+        -- YYYY-MM-DD
+        WHEN order_date ~ '^\d{4}-\d{2}-\d{2}$'
+            THEN TO_DATE(order_date, 'YYYY-MM-DD')
+
+        -- YYYY-MM
+        WHEN order_date ~ '^\d{4}-\d{2}$'
+            THEN TO_DATE(order_date || '-01', 'YYYY-MM-DD')
+    END AS order_date_val
+FROM dedup_orders;
+```
 
 Description:
 - To be able to refer back to the first part of the query, I used a CTE.
