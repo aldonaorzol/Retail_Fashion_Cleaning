@@ -160,19 +160,26 @@ FROM parsed;
 CREATE VIEW order_date_val AS
 SELECT *,
     CASE
-        -- DD.MM.YYYY lub DD-MM-YYYY
-        WHEN order_date ~ '^\d{2}[.-]\d{2}[.-]\d{4}$'
+        -- DD.MM.YYYY
+        WHEN order_date ~ '^(0[1-9]|[12]\d|3[01])\.(0[1-9]|1[0-2])\.\d{4}$'
+            THEN TO_DATE(order_date, 'DD.MM.YYYY')
+
+        -- DD-MM-YYYY
+        WHEN order_date ~ '^(0[1-9]|[12]\d|3[01])-(0[1-9]|1[0-2])-\d{4}$'
             THEN TO_DATE(order_date, 'DD-MM-YYYY')
 
         -- YYYY-MM-DD
-        WHEN order_date ~ '^\d{4}-\d{2}-\d{2}$'
+        WHEN order_date ~ '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
             THEN TO_DATE(order_date, 'YYYY-MM-DD')
 
-        -- YYYY-MM
-        WHEN order_date ~ '^\d{4}-\d{2}$'
+        -- YYYY-MM (ustawiamy 1. dzień miesiąca)
+        WHEN order_date ~ '^\d{4}-(0[1-9]|1[0-2])$'
             THEN TO_DATE(order_date || '-01', 'YYYY-MM-DD')
+
+        -- błędne rekordy (np. 2024-13-40) -> NULL
+        ELSE NULL
     END AS order_date_val
-FROM dedup_orders;
+FROM dedup_orders
 ```
 
 Description:
