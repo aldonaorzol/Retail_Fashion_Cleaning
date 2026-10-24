@@ -124,7 +124,7 @@ SELECT *
 FROM dedup_orders
 WHERE rn = 1;
 ```
-Description:
+Solutions:
 * Groups records by order_id using PARTITION BY order_id.
 * Assigns a sequential number (rn) to each row within the same order_id group using the ROW_NUMBER() function.
 * The first occurrence of each order_id receives rn = 1, while subsequent duplicates receive rn = 2, rn = 3, etc.
@@ -183,7 +183,7 @@ SELECT *,
     END AS order_date_val
 FROM dedup_orders
 ```
-Description:
+Solutions:
 - To be able to refer back to the first part of the query, I used a CTE.
 - I performed a simulation that allowed me to determine what percentage of all records consist of invalid values. As we can see above, this figure is 0.73%. Consequently, I decided to leave them as NULL values ​​and exclude them from the final analysis.
 - The query standardizes the date format in the column and converts the data type from text to DATE, ensuring data consistency and accuracy for further analysis.
@@ -192,6 +192,24 @@ Description:
 
 ### customer_id
 ### country
+The country column in the orders data contained the same country written in many different ways: ISO codes (PL, DE), full names (Poland, Germany), local-language names (Polska, Deutschland), alternative names (Holland, Czechia) and inconsistent capitalization or stray spaces. This made grouping and reporting by country unreliable, since one country was split across several categories.
+```
+SELECT *,
+    CASE
+        WHEN UPPER(TRIM(country)) IN ('AT', 'AUSTRIA')                            THEN 'Austria'
+        WHEN UPPER(TRIM(country)) IN ('CZ', 'CZECH', 'CZECHIA', 'CZECH REPUBLIC') THEN 'Czech Republic'
+        WHEN UPPER(TRIM(country)) IN ('DE', 'GER', 'GERMANY', 'DEUTSCHLAND')      THEN 'Germany'
+        WHEN UPPER(TRIM(country)) IN ('ES', 'SPAIN')                              THEN 'Spain'
+        WHEN UPPER(TRIM(country)) IN ('FR', 'FRANCE')                             THEN 'France'
+        WHEN UPPER(TRIM(country)) IN ('NL', 'NETHERLANDS', 'HOLLAND')             THEN 'Netherlands'
+        WHEN UPPER(TRIM(country)) IN ('PL', 'POL', 'POLAND', 'POLSKA')            THEN 'Poland'
+        WHEN UPPER(TRIM(country)) IN ('SE', 'SWEDEN')                             THEN 'Sweden'
+        WHEN UPPER(TRIM(country)) IN ('SK', 'SLOVAK', 'SLOVAKIA')                 THEN 'Slovakia'
+    END AS clear_country
+FROM dedup_orders;
+```
+Solutions:
+
 ### product_id
 ### quantity
 ### unit_price
