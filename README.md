@@ -140,7 +140,10 @@ As we can see, the data requires deduplication.
 
 <h2 align="center">TABLE sales_orders</h2>
 
-### Deduplication - order_id 
+### DEDUPLICATION - order_id 
+
+Problem:
+The dataset contained duplicate records identified by the same order_id. Duplicate orders could lead to inaccurate reporting, including overstated sales volumes, revenue, and order counts. To ensure data quality and reliable analysis, duplicate records needed to be identified and removed.
 
 ```
 CREATE VIEW dedup_orders AS
@@ -163,7 +166,10 @@ Solutions:
 * The result is saved as a View named dedup_orders, providing a deduplicated dataset without modifying the original source table.
 
 ### Date Format Standardization - order_date
-The column is stored as text and appears in various formats, such as YYYY-MM-DD, YYYY/MM/DD, or DD-MM-YYYY. The data also contains invalid dates, for example, 2024-13-40.
+
+Problem:
+The order_date column was stored as TEXT and mixed several formats (YYYY-MM-DD, YYYY/MM/DD, DD-MM-YYYY, DD.MM.YYYY, YYYY-MM). Some values were also impossible dates, such as 2024-13-40.
+
 ```
 WITH parsed AS (
     SELECT
@@ -221,11 +227,14 @@ Solutions:
 - Using the code '^(0[1-9]|[12]\d|3[01])\.(0[1-9]|1[0-2])\.\d{4}$', I excluded invalid dates such as 2024-13-40.
 - I standardized the date format to YYYY-MM-DD using the `CASE` function.
 
-### customer_id
+### UNIQUE CUSTOMER INDENTIFIER - customer_id
 No changes are required.
 
-### country
-The country column in the orders data contained the same country written in many different ways: ISO codes (PL, DE), full names (Poland, Germany), local-language names (Polska, Deutschland), alternative names (Holland, Czechia) and inconsistent capitalization or stray spaces. This made grouping and reporting by country unreliable, since one country was split across several categories.
+### DATA STANDARDIZATION - country
+
+Problem:
+The country column in the orders data contained the same country written in many different ways: codes (PL, DE), full names (Poland, Germany), local-language names (Polska, Deutschland), alternative names (Holland, Czechia) and inconsistent capitalization or stray spaces. This made grouping and reporting by country unreliable, since one country was split across several categories.
+
 ```
 CREATE VIEW clear_country AS
 SELECT *,
@@ -247,11 +256,14 @@ Solutions:
 - I built a CASE expression that maps every variant to a single standardized country name.
 - Each value is first normalized with UPPER(TRIM(country)), so the mapping does not depend on capitalization or leading/trailing spaces.
 
-### product_id
+### UNIQUE PRODUCT INDENTIFIER - product_id
 No changes are required.
 
-### quantity
-Problem: There is an outlier in the 'quantity' column. To make a decision, I want to calculate what percentage of the records consists of wrong data.
+### OUTLIERS - quantity
+
+Problem:
+There is an outlier in the quantity column. To make an informed decision, I calculated what percentage of records contain erroneous data.
+
 ```
 SELECT
     COUNT(*) AS total_records,
@@ -295,7 +307,14 @@ Solutions:
 
 ### unit_price
 Problem:
+Data needs changing of type and also have 0 data. 
+
+```
+
+```
+
 Solutions:
+- I couldn't find any specific dependences. 
 ### product_id
 Problem:
 Solutions:
