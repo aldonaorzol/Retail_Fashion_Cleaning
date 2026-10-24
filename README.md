@@ -1,9 +1,13 @@
 <h1 align="center">Retail_Fashion_Cleaning</h1>
 
-Tools: PostgreSQL, Microsoft Excel,  Copilot, Claude
+### Data analysis:
+https://github.com/aldonaorzol/Retail_Fashion_Analysis
 
+### Tools: 
+PostgreSQL, Microsoft Excel,  Copilot, Claude
+
+### Description:
 The source data contained numerous data quality issues, including inconsistent formats, duplicate records, missing values, and invalid entries. Using SQL, I performed data profiling, data cleansing, and data validation tasks as part of the ETL workflow to enhance data integrity and prepare the datasets for reliable business analysis and reporting. The process included standardizing country names, validating numerical fields, identifying potential outliers, converting data types, standardizing formats, and verifying consistency across sales, product, and inventory datasets. Additional data quality checks were conducted to ensure data accuracy, completeness, and compliance with business rules.
-
 
 ### Excel:
 1. Splitting values ​​into columns. 
@@ -60,11 +64,37 @@ CREATE TABLE inventory (
 I opened my folder in notebook to veryfy delimiters. It is semicolon ; 
 Import data -> Format - CSV, Encoding - UTF8
 
-<h2 align="center">Sales_order</h2>
-
-### Data Quality
+<h2 align="center">Data Quality</h2>
 Assess the quality of the data by checking:
+
+- Did I import all the records correctly?
+```
+SELECT 'sales_orders' AS table_name,
+       COUNT(*)        AS all_records,
+       COUNT(order_id) AS without_null
+FROM sales_orders
+
+UNION ALL
+
+SELECT 'products',
+       COUNT(*),
+       COUNT(product_id)
+FROM products
+
+UNION ALL
+
+SELECT 'inventory',
+       COUNT(*),
+       COUNT(product_id)
+FROM inventory;
+```
+
+<img width="325" height="119" alt="image" src="https://github.com/user-attachments/assets/eed79eeb-3ce9-4bff-af8d-9a935a5818f2" />
+
+The table above confirms that all records were successfully imported into PostgreSQL. Row counts match the source files, and the key columns contain no NULL values.
+
 - Whether there are any missing values.
+
 ```
 SELECT *
 FROM sales_orders
@@ -90,7 +120,7 @@ WHERE TRIM(product_id) = ''
    OR TRIM(stock_quantity) = ''
    OR TRIM(last_stock_update) = '';
 ```
-My first validation checked for empty strings (= '') and returned 0 rows, even though the source file clearly had missing values. PostgreSQL had converted those blanks to NULL during import.
+The validation checked for empty strings (= '') and returned 0 rows, even though the source file clearly had missing values. PostgreSQL had converted those blanks to NULL during import.
 
 - Whether duplicate records exist.
 
@@ -107,7 +137,8 @@ As we can see, the data requires deduplication.
   quantity has outliner 
 - Whether the data is consistent across the dataset.
 
-## TABLE sales_orders
+
+<h2 align="center">TABLE sales_orders</h2>
 
 ### Deduplication - order_id 
 
@@ -181,7 +212,7 @@ SELECT *,
         -- błędne rekordy (np. 2024-13-40) -> NULL
         ELSE NULL
     END AS order_date_val
-FROM dedup_orders
+FROM dedup_orders;
 ```
 Solutions:
 - To be able to refer back to the first part of the query, I used a CTE.
@@ -191,9 +222,12 @@ Solutions:
 - I standardized the date format to YYYY-MM-DD using the `CASE` function.
 
 ### customer_id
+No changes are required.
+
 ### country
 The country column in the orders data contained the same country written in many different ways: ISO codes (PL, DE), full names (Poland, Germany), local-language names (Polska, Deutschland), alternative names (Holland, Czechia) and inconsistent capitalization or stray spaces. This made grouping and reporting by country unreliable, since one country was split across several categories.
 ```
+CREATE VIEW clear_country AS
 SELECT *,
     CASE
         WHEN UPPER(TRIM(country)) IN ('AT', 'AUSTRIA')                            THEN 'Austria'
@@ -207,18 +241,33 @@ SELECT *,
         WHEN UPPER(TRIM(country)) IN ('SE', 'SWEDEN')                             THEN 'Sweden'
         WHEN UPPER(TRIM(country)) IN ('SK', 'SLOVAK', 'SLOVAKIA')                 THEN 'Slovakia'
     END AS clear_country
-FROM dedup_orders;
+FROM order_date_val;
 ```
 Solutions:
 - I built a CASE expression that maps every variant to a single standardized country name.
 - Each value is first normalized with UPPER(TRIM(country)), so the mapping does not depend on capitalization or leading/trailing spaces.
 
 ### product_id
-Problem:
-Solutions:
+No changes are required.
+
 ### quantity
-Problem:
+Problem: There is an outlier in the 'quantity' column. To make a decision, I want to calculate what percentage of the records consists of wrong data.
+```
+SELECT
+    COUNT(*) AS total_records,
+    COUNT(*) FILTER (WHERE quantity = '608') AS outliers,
+    ROUND(
+        COUNT(*) FILTER (WHERE quantity = '608') * 100.0
+        / COUNT(*),
+        2
+    ) AS outlier_percentage
+FROM clear_country;
+```
+<img width="349" height="75" alt="image" src="https://github.com/user-attachments/assets/7f04713e-071e-40d8-8f38-57783e62c24e" />
+
 Solutions:
+- Calculated the percentage of records containing an outlier value (quantity = 608), to assess the impact of anomalous observations on the dataset.
+- As a matter of fact I decided to treat the outliers as NULL.
 ### product_id
 Problem:
 Solutions:
@@ -241,7 +290,8 @@ Solutions:
 Problem:
 Solutions:
 
-## TABLE products
+
+<h2 align="center">TABLE products</h2>
 
 ### product_id
 Problem:
@@ -259,7 +309,7 @@ Solutions:
 Problem:
 Solutions:
 
-## TABLE inventory 
+<h2 align="center">TABLE inventory</h2>
 
 ### product_id
 Problem:
