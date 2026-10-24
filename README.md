@@ -328,21 +328,15 @@ Solutions:
 - I couldn't find any specific dependences.
 - Impossible data consist 0,62 % of all values so i decide to exchange them to NULL values.
 - 
-### product_id
-Problem:
-Solutions:
+
 ### discount_pct
 Problem:
 Solutions:
-### product_id
-Problem:
-Solutions:
+
 ### status
 Problem:
 Solutions:
-### product_id
-Problem:
-Solutions:
+
 
 
 <h2 align="center">TABLE products</h2>
