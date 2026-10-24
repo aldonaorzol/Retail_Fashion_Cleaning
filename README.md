@@ -9,8 +9,8 @@ PostgreSQL, Microsoft Excel,  Copilot, Claude
 ### Description:
 The source data contained numerous data quality issues, including inconsistent formats, duplicate records, missing values, and invalid entries. Using SQL, I performed data profiling, data cleansing, and data validation tasks as part of the ETL workflow to enhance data integrity and prepare the datasets for reliable business analysis and reporting. The process included standardizing country names, validating numerical fields, identifying potential outliers, converting data types, standardizing formats, and verifying consistency across sales, product, and inventory datasets. Additional data quality checks were conducted to ensure data accuracy, completeness, and compliance with business rules.
 
-### Excel:
-1. Splitting values ​​into columns. 
+### Splitting values ​​into columns in Excel:
+
 Data -> Text to columns -> Comma
 
 Before
