@@ -306,8 +306,9 @@ Solutions:
 - As these values accounted for only 1% of all records and were identified as data quality issues, they were replaced with NULL values.
 
 ### unit_price
+
 Problem:
-Data needs changing of type and also have 0 data. 
+The unit_price column was stored as TEXT and had to be converted to NUMERIC before analysis. It also contained zero values, which are implausible for unit prices (the lowest non-zero price is about 30) and likely represent missing data. 
 
 ```
 SELECT
@@ -322,12 +323,19 @@ FROM quantity_cl;
 
 <img width="377" height="68" alt="image" src="https://github.com/user-attachments/assets/4ab0be09-8bb0-4f89-8238-e4fb10d496d4" />
 
-
+```
+CREATE VIEW unit_price_cl AS
+SELECT *,
+    CASE
+	WHEN unit_price = '0.0' THEN NULL
+	ELSE unit_price
+	END AS unit_price_cl
+FROM quantity_cl;
+```
 
 Solutions:
-- I couldn't find any specific dependences.
-- Impossible data consist 0,62 % of all values so i decide to exchange them to NULL values.
-- 
+- I did not find any specific dependencies (e.g., the zero values were not concentrated in a particular country, product, or date).
+- Impossible values accounted for 0.62% of all records, so I decided to replace them with NULL rather than delete the rows.
 
 ### discount_pct
 Problem:
