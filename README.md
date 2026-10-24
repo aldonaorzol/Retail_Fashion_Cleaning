@@ -197,11 +197,12 @@ The country column in the orders data contained the same country written in many
 SELECT *,
     CASE
         WHEN UPPER(TRIM(country)) IN ('AT', 'AUSTRIA')                            THEN 'Austria'
-        WHEN UPPER(TRIM(country)) IN ('CZ', 'CZECH', 'CZECHIA', 'CZECH REPUBLIC') THEN 'Czech Republic'
+        WHEN UPPER(TRIM(country)) IN ('CZ', 'CZECH', 'CZECHIA', 'CZECH REPUBLIC') THEN 'The Czech Republic'
         WHEN UPPER(TRIM(country)) IN ('DE', 'GER', 'GERMANY', 'DEUTSCHLAND')      THEN 'Germany'
         WHEN UPPER(TRIM(country)) IN ('ES', 'SPAIN')                              THEN 'Spain'
         WHEN UPPER(TRIM(country)) IN ('FR', 'FRANCE')                             THEN 'France'
-        WHEN UPPER(TRIM(country)) IN ('NL', 'NETHERLANDS', 'HOLLAND')             THEN 'Netherlands'
+		WHEN UPPER(TRIM(country)) IN ('IT', 'ITALY')                              THEN 'Italy'
+        WHEN UPPER(TRIM(country)) IN ('NL', 'NETHERLANDS', 'HOLLAND')             THEN 'The Netherlands'
         WHEN UPPER(TRIM(country)) IN ('PL', 'POL', 'POLAND', 'POLSKA')            THEN 'Poland'
         WHEN UPPER(TRIM(country)) IN ('SE', 'SWEDEN')                             THEN 'Sweden'
         WHEN UPPER(TRIM(country)) IN ('SK', 'SLOVAK', 'SLOVAKIA')                 THEN 'Slovakia'
@@ -209,24 +210,65 @@ SELECT *,
 FROM dedup_orders;
 ```
 Solutions:
+I built a CASE expression that maps every variant to a single standardized country name. Each value is first normalized with UPPER(TRIM(country)), so the mapping does not depend on capitalization or leading/trailing spaces.
 
 ### product_id
+Problem:
+Solutions:
 ### quantity
+Problem:
+Solutions:
+### product_id
+Problem:
+Solutions:
 ### unit_price
+Problem:
+Solutions:
+### product_id
+Problem:
+Solutions:
 ### discount_pct
+Problem:
+Solutions:
+### product_id
+Problem:
+Solutions:
 ### status
+Problem:
+Solutions:
+### product_id
+Problem:
+Solutions:
 
 ## TABLE products
 
 ### product_id
+Problem:
+Solutions:
 ### category
+Problem:
+Solutions:
 ### sub_category
+Problem:
+Solutions:
 ### base_price
+Problem:
+Solutions:
 ### launch_date
+Problem:
+Solutions:
 
 ## TABLE inventory 
 
 ### product_id
+Problem:
+Solutions:
 ### warehouse_country
+Problem:
+Solutions:
 ### stock_quantity
+Problem:
+Solutions:
 ### last_stock_update
+Problem:
+Solutions:
