@@ -107,6 +107,8 @@ As we can see, the data requires deduplication.
   quantity has outliner 
 - Whether the data is consistent across the dataset.
 
+## TABLE sales_orders
+
 ### Deduplication - order_id 
 
 ```
@@ -187,3 +189,26 @@ Description:
 - The query standardizes the date format in the column and converts the data type from text to DATE, ensuring data consistency and accuracy for further analysis.
 - Using the code '^(0[1-9]|[12]\d|3[01])\.(0[1-9]|1[0-2])\.\d{4}$', I excluded invalid dates such as 2024-13-40.
 - I standardized the date format to YYYY-MM-DD using the `CASE` function.
+
+### customer_id
+### country
+### product_id
+### quantity
+### unit_price
+### discount_pct
+### status
+
+## TABLE products
+
+### product_id
+### category
+### sub_category
+### base_price
+### launch_date
+
+## TABLE inventory 
+
+### product_id
+### warehouse_country
+### stock_quantity
+### last_stock_update
