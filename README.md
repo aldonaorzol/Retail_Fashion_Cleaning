@@ -255,22 +255,44 @@ Problem: There is an outlier in the 'quantity' column. To make a decision, I wan
 ```
 SELECT
     COUNT(*) AS total_records,
-    COUNT(*) FILTER (WHERE quantity = '608') AS outliers,
+    COUNT(*) FILTER (
+        WHERE quantity IN ('608', '0')
+    ) AS outliers,
     ROUND(
-        COUNT(*) FILTER (WHERE quantity = '608') * 100.0
+        COUNT(*) FILTER (
+            WHERE quantity IN ('608', '0')
+        ) * 100.0
         / COUNT(*),
         2
     ) AS outlier_percentage
 FROM clear_country;
 ```
-<img width="349" height="75" alt="image" src="https://github.com/user-attachments/assets/7f04713e-071e-40d8-8f38-57783e62c24e" />
+
+<img width="352" height="71" alt="image" src="https://github.com/user-attachments/assets/63805611-6d82-4022-a226-527b2c870dce" />
+
+```
+SELECT quantity, COUNT(*)
+FROM clear_country
+GROUP BY quantity
+ORDER BY 2 DESC;
+```
+
+<img width="178" height="417" alt="image" src="https://github.com/user-attachments/assets/7c844665-a011-4960-8366-397167e09bf0" />
+
+```
+CREATE VIEW quantity_cl AS
+SELECT *,
+    CASE
+        WHEN quantity IN ('0', '608') THEN NULL
+        ELSE quantity
+    END AS quantity_cl
+FROM clear_country;
+```
 
 Solutions:
-- Calculated the percentage of records containing an outlier value (quantity = 608), to assess the impact of anomalous observations on the dataset.
-- As a matter of fact I decided to treat the outliers as NULL.
-### product_id
-Problem:
-Solutions:
+- Calculated the percentage of records containing outlier values (quantity = 608 and quantity = 0) to assess their impact on the dataset.
+- As these values accounted for only 1% of all records and were identified as data quality issues, they were replaced with NULL values.
+
 ### unit_price
 Problem:
 Solutions:
