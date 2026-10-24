@@ -310,11 +310,24 @@ Problem:
 Data needs changing of type and also have 0 data. 
 
 ```
-
+SELECT
+    COUNT(*)                                                  AS total_records,
+    COUNT(*) FILTER (WHERE unit_price = '0.0')                    AS impossible_values,
+    ROUND(
+        100.0 * COUNT(*) FILTER (WHERE unit_price = '0.0') / COUNT(*),
+        2
+    )                                                         AS impo_val_per
+FROM quantity_cl;
 ```
 
+<img width="377" height="68" alt="image" src="https://github.com/user-attachments/assets/4ab0be09-8bb0-4f89-8238-e4fb10d496d4" />
+
+
+
 Solutions:
-- I couldn't find any specific dependences. 
+- I couldn't find any specific dependences.
+- Impossible data consist 0,62 % of all values so i decide to exchange them to NULL values.
+- 
 ### product_id
 Problem:
 Solutions:
