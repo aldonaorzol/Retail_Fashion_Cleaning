@@ -210,7 +210,8 @@ SELECT *,
 FROM dedup_orders;
 ```
 Solutions:
-I built a CASE expression that maps every variant to a single standardized country name. Each value is first normalized with UPPER(TRIM(country)), so the mapping does not depend on capitalization or leading/trailing spaces.
+- I built a CASE expression that maps every variant to a single standardized country name.
+- Each value is first normalized with UPPER(TRIM(country)), so the mapping does not depend on capitalization or leading/trailing spaces.
 
 ### product_id
 Problem:
