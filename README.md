@@ -475,10 +475,54 @@ Solutions:
 
 ### base_price
 Problem:
+These prices appear reliable and do not require cleaning. The distribution ranges roughly from 31 to 410, with most values ​​falling between 60 and 300; there are no negative values, text, or unusual formats. I do not see any zeros or extreme outliers here.
+
+```
+SELECT
+    COUNT(*)                                              AS all_rows,
+    COUNT(base_price)                                          AS non_null,
+    MIN(base_price::NUMERIC)                                   AS min_price,
+    MAX(base_price::NUMERIC)                                   AS max_price
+FROM products;
+```
+
+<img width="366" height="67" alt="image" src="https://github.com/user-attachments/assets/9239d0e8-2fa5-4525-b4b0-537076b6113d" />
+
 Solutions:
+- Before using base_price in revenue and margin calculations, I needed to confirm that the column was complete and contained realistic numeric values.
+- I ran a profiling query that checks the total row count, the number of non-NULL values, and the minimum and maximum price after casting to NUMERIC. The cast succeeded for every row, which confirms that all values are numeric. The prices fell between about 31 and 410, with no NULLs, and no zero or negative values.
+
 ### launch_date
 Problem:
+These dates appear consistent: they all follow the DD.MM.YYYY format, with leading zeros and a dot as a separator. I see no mixed formats, YYYY-MM patterns, or invalid values ​​such as 2024-13-40. The range spans the years 2015–2024, which is realistic (there are no dates from the future or from 1900).
+
+```
+SELECT
+    CASE
+        WHEN launch_date ~ '^\d{2}\.\d{2}\.\d{4}$' THEN 'DD.MM.YYYY'
+        WHEN launch_date ~ '^\d{2}-\d{2}-\d{4}$'   THEN 'DD-MM-YYYY'
+        WHEN launch_date ~ '^\d{4}-\d{2}-\d{2}$'   THEN 'YYYY-MM-DD'
+        WHEN launch_date ~ '^\d{4}/\d{2}/\d{2}$'   THEN 'YYYY/MM/DD'
+        WHEN launch_date ~ '^\d{4}-\d{2}$'         THEN 'YYYY-MM'
+        WHEN launch_date IS NULL                   THEN 'NULL'
+        ELSE 'other'
+    END AS format,
+    COUNT(*) AS cnt,
+    MIN(launch_date) AS example
+FROM products
+GROUP BY 1
+ORDER BY cnt DESC;
+```
+
+<img width="269" height="167" alt="image" src="https://github.com/user-attachments/assets/9bef0570-40f1-454a-b4e1-6e0a07899d3e" />
+
+
 Solutions:
+- Zdecydowana większość (95,84%) jest poprawna w formacie DD.MM.YYYY. Kolumna jest prawie spójna, więc nie trzeba jej przebudowywać, tylko obsłużyć wyjątki.
+- 91 NULL-i (3,64%) to braki. Zostaw je jako NULL, ale odnotuj skalę. To najliczniejszy problem.
+- 6 rekordów other: przykład not_a_date to jawnie błędny tekst. Zamień na NULL.
+- 4 rekordy YYYY-MM-DD: przykład 2024-13-... wygląda na niemożliwą datę (miesiąc 13). Regex formatu je złapał, ale TO_DATE je odrzuci, więc część z nich (lub wszystkie) będzie NULL. Sprawdź je ręcznie.
+- 3 rekordy YYYY-MM (np. 2017-05): da się sparsować na 1. dzień miesiąca, ale mają niższą precyzję, więc oznacz je flagą.
 
 <h2 align="center">TABLE inventory</h2>
 
