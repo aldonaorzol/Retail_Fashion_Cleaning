@@ -148,8 +148,36 @@ The data includes unrealistic values such as zero prices, outliers, impossible d
 
 ### DEDUPLICATION - order_id and customer_id
 
-***Problem:***
-The dataset contained duplicate records identified by the same order_id. Duplicate orders could lead to inaccurate reporting, including overstated sales volumes, revenue, and order counts. To ensure data quality and reliable analysis, duplicate records needed to be identified and removed.
+***Problem order_id:***
+- The column contains no NULL values (260,780 rows, all non-null).
+- It contains 260,000 unique values in the range 1–260,000, so it is not unique (780 duplicated rows).
+
+```
+SELECT
+    COUNT(*) AS all_rows,
+    COUNT(order_id) AS non_null,
+    COUNT(DISTINCT order_id) AS unique_ids,
+    MIN(order_id::INT) AS min_id,
+    MAX(order_id::INT) AS max_id
+FROM sales_orders;
+```
+
+<img width="426" height="69" alt="image" src="https://github.com/user-attachments/assets/adf1423f-1468-4fd1-a225-5144b83a4f45" />
+
+***Problem customer_id:***
+- The column contains no NULL values (260,780 rows, all non-null).
+- It contains 59,200 unique values in the range 1–59,999, so it is not unique.
+- There are gaps in the ID range (about 799 missing numbers).
+```
+SELECT
+    COUNT(*) AS all_rows,
+    COUNT(customer_id) AS non_null,
+    COUNT(DISTINCT customer_id) AS unique_ids,
+    MIN(customer_id::INT) AS min_id,
+    MAX(customer_id::INT) AS max_id
+FROM sales_orders;
+```
+<img width="421" height="71" alt="image" src="https://github.com/user-attachments/assets/9b5b0d8a-5c46-406a-bf72-016a410de22a" />
 
 ```
 CREATE OR REPLACE VIEW dedup AS
@@ -166,11 +194,11 @@ FROM ranked
 WHERE rnn = 1;
 ```
 ***Solutions:***
-* Groups records by order_id using PARTITION BY order_id.
-* Assigns a sequential number (rn) to each row within the same order_id group using the ROW_NUMBER() function.
-* The first occurrence of each order_id receives rn = 1, while subsequent duplicates receive rn = 2, rn = 3, etc.
-* The WHERE rn = 1 filter keeps only the first occurrence of each order.
-* The result is saved as a View named dedup_orders, providing a deduplicated dataset without modifying the original source table.
+- Groups records by both order_id and customer_id using PARTITION BY order_id, customer_id.
+- Assigns a sequential number (rnn) to each row within the same (order_id, customer_id) group using the ROW_NUMBER() function.
+- The first occurrence of each order_id and customer_id combination receives rnn = 1, while subsequent duplicates receive rnn = 2, rnn = 3, etc.
+- The WHERE rnn = 1 filter keeps only the first occurrence of each combination.
+- The result is saved as a View named dedup, providing a deduplicated dataset without modifying the original source table.
 
 ### DATE FORMAT STANDARIZATION - order_date
 
