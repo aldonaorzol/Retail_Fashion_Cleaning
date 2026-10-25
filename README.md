@@ -142,17 +142,13 @@ As we can see, the data requires deduplication.
   
 - Whether the values stored in each column are reasonable (e.g., prices, quantities).
 
-Prices and stock levels fall within realistic ranges. Implausible values (zero prices, outliers, impossible dates, corrupted discounts) made up a small share of rows, except discount_pct, and were neutralized without deleting records.
-
-- Whether the data is consistent across the dataset.
-
-The raw data wasn't consistent. 
+The data includes unrealistic values such as zero prices, outliers, impossible dates and unreadable discount values. These problematic records made up a small share of rows, except in discount_pct.
 
 <h2 align="center">TABLE sales_orders</h2>
 
 ### DEDUPLICATION - order_id 
 
-Problem:
+***Problem:***
 The dataset contained duplicate records identified by the same order_id. Duplicate orders could lead to inaccurate reporting, including overstated sales volumes, revenue, and order counts. To ensure data quality and reliable analysis, duplicate records needed to be identified and removed.
 
 ```
@@ -168,17 +164,17 @@ SELECT *
 FROM dedup_orders
 WHERE rn = 1;
 ```
-Solutions:
+***Solutions:***
 * Groups records by order_id using PARTITION BY order_id.
 * Assigns a sequential number (rn) to each row within the same order_id group using the ROW_NUMBER() function.
 * The first occurrence of each order_id receives rn = 1, while subsequent duplicates receive rn = 2, rn = 3, etc.
 * The WHERE rn = 1 filter keeps only the first occurrence of each order.
 * The result is saved as a View named dedup_orders, providing a deduplicated dataset without modifying the original source table.
 
-### Date Format Standardization - order_date
+### DATE FORMAT STANDARIZATION - order_date
 
-Problem:
-The order_date column was stored as TEXT and mixed several formats (YYYY-MM-DD, YYYY/MM/DD, DD-MM-YYYY, DD.MM.YYYY, YYYY-MM). Some values were also impossible dates, such as 2024-13-40.
+***Problem:***
+The order_date column mixed several formats (YYYY-MM-DD, YYYY/MM/DD, DD-MM-YYYY, DD.MM.YYYY, YYYY-MM). Some values were also impossible dates, such as 2024-13-40.
 
 ```
 WITH parsed AS (
@@ -230,7 +226,7 @@ SELECT *,
     END AS order_date_val
 FROM dedup_orders;
 ```
-Solutions:
+***Solutions:***
 - To be able to refer back to the first part of the query, I used a CTE.
 - I performed a simulation that allowed me to determine what percentage of all records consist of invalid values. As we can see above, this figure is 0.73%. Consequently, I decided to leave them as NULL values ​​and exclude them from the final analysis.
 - The query standardizes the date format in the column and converts the data type from text to DATE, ensuring data consistency and accuracy for further analysis.
