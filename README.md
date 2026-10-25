@@ -311,7 +311,7 @@ Solutions:
 - Calculated the percentage of records containing outlier values (quantity = 608 and quantity = 0) to assess their impact on the dataset.
 - As these values accounted for only 1% of all records and were identified as data quality issues, they were replaced with NULL values.
 
-### unit_price
+### REPLACING INVALID VALUES WITH NULL - unit_price
 
 Problem:
 The unit_price column was stored as TEXT and had to be converted to NUMERIC before analysis. It also contained zero values, which are implausible for unit prices (the lowest non-zero price is about 30) and likely represent missing data. 
@@ -343,7 +343,7 @@ Solutions:
 - I did not find any specific dependencies (e.g., the zero values were not concentrated in a particular country, product, or date).
 - Impossible values accounted for 0.62% of all records, so I decided to replace them with NULL rather than delete the rows.
 
-### discount_pct
+### DATA RECOVERY - discount_pct
 
 Problem: 
 The discount_pct column was corrupted in 49.2% of records. The column contains dates, values ​​of 0.0, and NULLs. It is 	.....
@@ -415,7 +415,7 @@ Solutions:
 
 <h2 align="center">TABLE products</h2>
 
-### product_id
+### DATA PROFILING - product_id
 Problem:
 Before using product_id as a key for joining the products, inventory, and sales_orders tables, I needed to confirm that the column was complete and unique.
 
@@ -437,7 +437,7 @@ Solutions:
 - I ran a single profiling query that checks the row count, the number of non-NULL values, the number of distinct values, and the minimum and maximum ID
 - The column required no cleaning.
   
-### category
+### DATA PROFILING - category
 Problem: 
 Spelling and capitalization are consistent (each value begins with an uppercase letter); I see no typos, variations such as "women" / "WOMEN" / "Woman," or empty fields.
 
@@ -455,7 +455,7 @@ Solutions:
 - The result showed exactly five categories (Women, Men, Kids, Shoes, Accessories), with consistent spelling and capitalization and no duplicate variants.
 - The column required no cleaning.
 
-### sub_category
+### DATA PROFILING - sub_category
 
 Problem:
 This column appears consistent in terms of spelling, but it has a structural issue that is worth describing.
@@ -479,7 +479,7 @@ END AS category_group
 Solutions:
 - I see about 25 values, all formatted consistently, capitalized first letter, no variations like "jeans" vs. "JEANS," and no typos.
 
-### base_price
+### DATA PROFILING - base_price
 Problem:
 These prices appear reliable and do not require cleaning. The distribution ranges roughly from 31 to 410, with most values ​​falling between 60 and 300; there are no negative values, text, or unusual formats. I do not see any zeros or extreme outliers here.
 
