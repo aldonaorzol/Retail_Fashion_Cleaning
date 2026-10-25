@@ -228,12 +228,13 @@ FROM dedup_orders;
 ```
 ***Solutions:***
 - To be able to refer back to the first part of the query, I used a CTE.
-- I performed a simulation that allowed me to determine what percentage of all records consist of invalid values. As we can see above, this figure is 0.73%. Consequently, I decided to leave them as NULL values ​​and exclude them from the final analysis.
-- The query standardizes the date format in the column and converts the data type from text to DATE, ensuring data consistency and accuracy for further analysis.
-- Using the code '^(0[1-9]|[12]\d|3[01])\.(0[1-9]|1[0-2])\.\d{4}$', I excluded invalid dates such as 2024-13-40.
-- I standardized the date format to YYYY-MM-DD using the `CASE` function.
+- I simulated to determine what percentage of all records contain invalid values. As shown above, this figure is 0.73%. Consequently, I left them as NULL values and excluded them from the final analysis.
+- Using the code '^(0[1-9]|[12]\d|3[01]).(0[1-9]|1[0-2]).\d{4}$', I excluded invalid dates such as 2024-13-40.
+- I standardized the date format to YYYY-MM-DD using the CASE function.
 
 ### UNIQUE CUSTOMER IDENTIFIER - customer_id
+
+
 No changes are required.
 
 ### DATA STANDARDIZATION - country
