@@ -146,7 +146,7 @@ The data includes unrealistic values such as zero prices, outliers, impossible d
 
 <h2 align="center">TABLE sales_orders</h2>
 
-### DEDUPLICATION - order_id and customer_id
+### DEDUPLICATION - order_id, customer_id and product_id
 
 ***Problem order_id:***
 - The column contains no NULL values (260,780 rows, all non-null).
@@ -178,6 +178,23 @@ SELECT
 FROM sales_orders;
 ```
 <img width="421" height="71" alt="image" src="https://github.com/user-attachments/assets/9b5b0d8a-5c46-406a-bf72-016a410de22a" />
+
+***Problem product_id:***
+- The column contains no NULL values (260,780 rows, all non-null).
+- It contains 2,500 unique values in the range 1–2,500, so it is not unique.
+  
+```
+SELECT
+    COUNT(*) AS all_rows,
+    COUNT(product_id) AS non_null,
+    COUNT(DISTINCT product_id) AS unique_ids,
+    MIN(product_id::INT) AS min_id,
+    MAX(product_id::INT) AS max_id
+FROM sales_orders;
+```
+
+<img width="422" height="70" alt="image" src="https://github.com/user-attachments/assets/31bbfa65-8235-48f5-bb65-2be1f766c7e6" />
+
 
 ***Solutions:***
 
