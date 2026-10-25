@@ -179,6 +179,8 @@ FROM sales_orders;
 ```
 <img width="421" height="71" alt="image" src="https://github.com/user-attachments/assets/9b5b0d8a-5c46-406a-bf72-016a410de22a" />
 
+***Solutions:***
+
 ```
 CREATE OR REPLACE VIEW dedup AS
 WITH ranked AS (
@@ -193,7 +195,7 @@ SELECT *
 FROM ranked
 WHERE rnn = 1;
 ```
-***Solutions:***
+
 - Groups records by both order_id and customer_id using PARTITION BY order_id, customer_id.
 - Assigns a sequential number (rnn) to each row within the same (order_id, customer_id) group using the ROW_NUMBER() function.
 - The first occurrence of each order_id and customer_id combination receives rnn = 1, while subsequent duplicates receive rnn = 2, rnn = 3, etc.
@@ -230,6 +232,8 @@ FROM parsed;
 
 <img width="386" height="76" alt="image" src="https://github.com/user-attachments/assets/99a8de21-86fd-4078-8183-fdcf1527c4ed" />
 
+***Solutions:***
+
 ```
 CREATE VIEW order_date_val AS
 SELECT *,
@@ -255,7 +259,7 @@ SELECT *,
     END AS order_date_val
 FROM dedup_orders;
 ```
-***Solutions:***
+
 - To be able to refer back to the first part of the query, I used a CTE.
 - I simulated to determine what percentage of all records contain invalid values. As shown above, this figure is 0.73%. Consequently, I left them as NULL values and excluded them from the final analysis.
 - Using the code '^(0[1-9]|[12]\d|3[01]).(0[1-9]|1[0-2]).\d{4}$', I excluded invalid dates such as 2024-13-40.
