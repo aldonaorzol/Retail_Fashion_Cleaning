@@ -25,10 +25,7 @@ After
 
 The pictures present the sales_orders table. I followed the same approach for the other tables. 
 
-### PostgreSQL:
-
-Create database Retail_fashion
-
+### Create database Retail_fashion in PostgreSQL:
 
 Because the dataset is heavily polluted with data quality issues, a staging table with columns stored as TEXT was created to allow the data to be imported successfully.
 
