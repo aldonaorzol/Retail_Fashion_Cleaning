@@ -411,7 +411,15 @@ Solutions:
 
 ### product_id
 Problem:
+
+```
+SELECT COUNT(*) AS all_records, COUNT(DISTINCT(product_id)) AS unique_values
+FROM products;
+```
+<img width="245" height="69" alt="image" src="https://github.com/user-attachments/assets/571d607f-0e7f-493a-9cf4-825512875cbf" />
+
 Solutions:
+As we can see upper the column has unique values. 
 ### category
 Problem:
 Solutions:
