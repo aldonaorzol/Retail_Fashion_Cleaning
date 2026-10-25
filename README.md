@@ -58,11 +58,10 @@ CREATE TABLE inventory (
 );
 ```
 
-I opened my folder in notebook to veryfy delimiters. It is semicolon ; 
+I opened my folder in a text editor to verify delimiters. It is semicolon ; 
 Import data -> Format - CSV, Encoding - UTF8
 
 <h2 align="center">Data Quality</h2>
-Assess the quality of the data by checking:
 
 - Did I import all the records correctly?
 ```
@@ -233,7 +232,7 @@ Solutions:
 - Using the code '^(0[1-9]|[12]\d|3[01])\.(0[1-9]|1[0-2])\.\d{4}$', I excluded invalid dates such as 2024-13-40.
 - I standardized the date format to YYYY-MM-DD using the `CASE` function.
 
-### UNIQUE CUSTOMER INDENTIFIER - customer_id
+### UNIQUE CUSTOMER IDENTIFIER - customer_id
 No changes are required.
 
 ### DATA STANDARDIZATION - country
@@ -262,7 +261,7 @@ Solutions:
 - I built a CASE expression that maps every variant to a single standardized country name.
 - Each value is first normalized with UPPER(TRIM(country)), so the mapping does not depend on capitalization or leading/trailing spaces.
 
-### UNIQUE PRODUCT INDENTIFIER - product_id
+### UNIQUE PRODUCT IDENTIFIER - product_id
 No changes are required.
 
 ### OUTLIERS - quantity
@@ -587,3 +586,6 @@ This sample appears consistent: all values ​​follow the DD.MM.YYYY format, w
 ```
 
 Solutions:
+
+
+<h2 align="center">Results:</h2>
