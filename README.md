@@ -58,8 +58,8 @@ CREATE TABLE inventory (
 );
 ```
 
-I opened my folder in a text editor to verify delimiters. It is semicolon ; 
-Import data -> Format - CSV, Encoding - UTF8
+I opened the source file in a text editor (Notepad) to verify the delimiter. It is a semicolon (;).
+Import settings: Format: CSV, Encoding: UTF-8, Delimiter: ;
 
 <h2 align="center">Data Quality</h2>
 
@@ -120,11 +120,23 @@ The validation checked for empty strings (= '') and returned 0 rows, even though
 
 - Whether duplicate records exist.
 
+sales_orders table
 ```
 SELECT COUNT(order_id) AS all_orders, COUNT(DISTINCT order_id) AS distinct_orders
 FROM sales_orders;
 ```
 <img width="242" height="69" alt="image" src="https://github.com/user-attachments/assets/7a5cfaa4-5c58-4e85-b4f9-8d393c126465" />
+
+inventory table
+
+```
+SELECT
+COUNT(product_id) AS all_products, 
+COUNT(DISTINCT product_id) AS distinct_products
+FROM inventory;
+```
+
+<img width="267" height="68" alt="image" src="https://github.com/user-attachments/assets/91743a41-d283-4f9d-a8f7-df7b4c366949" />
 
 As we can see, the data requires deduplication.
   
