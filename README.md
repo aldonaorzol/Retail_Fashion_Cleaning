@@ -309,13 +309,6 @@ FROM order_date_val;
 - I built a CASE expression that maps every variant to a single standardized country name.
 - Each value is first normalized with UPPER(TRIM(country)), so the mapping does not depend on capitalization or leading/trailing spaces.
 
-### UNIQUE PRODUCT IDENTIFIER - product_id
-***Problem:***
-
-
-***Solutions:***
-No changes are required.
-
 ### OUTLIERS - quantity
 
 ***Problem:***
