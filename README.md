@@ -141,19 +141,12 @@ FROM inventory;
 As we can see, the data requires deduplication.
   
 - Whether the values stored in each column are reasonable (e.g., prices, quantities).
-  
-Conclusion: Prices and stock levels fall within realistic ranges. Implausible values (zero prices, the 608 quantity, impossible dates, corrupted discounts) made up a small share of rows, except discount_pct, and were neutralized without deleting records.
+
+Prices and stock levels fall within realistic ranges. Implausible values (zero prices, outliers, impossible dates, corrupted discounts) made up a small share of rows, except discount_pct, and were neutralized without deleting records.
 
 - Whether the data is consistent across the dataset.
 
-No, the raw data was not consistent across the dataset, but it became consistent after cleaning.
-I checked consistency at four levels:
-Formats and types: Dates were stored as text in several formats (DD.MM.YYYY, DD-MM-YYYY, YYYY-MM-DD, YYYY-MM) and contained impossible values such as 2024-13-40. Numeric columns were stored as TEXT.
-Category values: The same country and status were written in many ways (PL, Polska, poland; SHIP, shipped, done, Completed). I standardized them with UPPER(TRIM()) and CASE mappings.
-Invalid and placeholder values: quantity contained the placeholder value 608 (0.6% of rows), unit_price contained zeros, and discount_pct was corrupted in 49.2% of rows by spreadsheet date auto-conversion. I replaced unreliable values with NULL and flagged them.
-Keys and duplicates: order_id contained duplicates, which I removed with ROW_NUMBER() OVER (PARTITION BY ...). product_id was complete and unique in products.
-
-Result: After cleaning, each column has one data type and one format, categories are standardized, and invalid values are marked as NULL instead of being guessed. Remaining limitations: discount_pct is reliable for only about half of the records, and month-only launch dates have lower precision.
+The raw data wasn't consistent. 
 
 <h2 align="center">TABLE sales_orders</h2>
 
