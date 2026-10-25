@@ -529,12 +529,55 @@ Solutions:
 ### DEDUPLICATION - product_id
 Problem:
 Solutions:
+
 ### DATA STANDARDIZATION - warehouse_country
 Problem:
+The country column in the inventory table described the same warehouse location in many different ways: ISO codes (PL, DE, CZ), full English names (Poland, Germany), local-language names (Polska, Deutschland), alternative names (Czechia) and inconsistent capitalization or stray spaces. One country was therefore split across several categories, which made grouping and reporting stock by country unreliable.
+
+```
+CREATE VIEW warehouse_country_cl AS
+SELECT *,
+    CASE
+        WHEN UPPER(TRIM(country)) IN ('CZ', 'CZECH', 'CZECHIA', 'CZECH REPUBLIC') THEN 'The Czech Republic'
+        WHEN UPPER(TRIM(country)) IN ('DE', 'GER', 'GERMANY', 'DEUTSCHLAND')      THEN 'Germany'
+        WHEN UPPER(TRIM(country)) IN ('PL', 'POL', 'POLAND', 'POLSKA')            THEN 'Poland'
+    END AS clear_country
+FROM inventory;
+```
 Solutions:
+- I created a view (warehouse_country_cl) with a CASE expression that maps every variant to a single standardized country name.
+- Each value is first normalized with UPPER(TRIM(country)), so the mapping does not depend on capitalization or leading/trailing spaces. IN (...) lists group all known variants of a country under one label.
+- The original column is kept next to the new clear_country column, so the cleaning stays transparent and auditable, and the raw table is never modified.
+
 ### stock_quantity
+
 Problem:
+The values ​​are whole numbers, mostly ranging from 0 to approximately 570, with no text, fractions, or negative values. Structurally, it looks clean.
+Before using stock_quantity in inventory analysis, I needed to confirm that the column was complete, numeric and within a realistic range. The column was stored as TEXT, and it contained many zero values, so I had to decide whether they represent missing data or genuine stock-outs.
+
+```
+SELECT
+    COUNT(*)                                             AS all_rows,
+    COUNT(stock_quantity)                                AS non_null,
+    COUNT(*) FILTER (WHERE stock_quantity = '0')         AS zeros,
+    ROUND(100.0 * COUNT(*) FILTER (WHERE stock_quantity = '0') / COUNT(*), 2) AS zeros_pct,
+    MIN(stock_quantity::INT), MAX(stock_quantity::INT)
+FROM inventory;
+```
+
+<img width="474" height="73" alt="image" src="https://github.com/user-attachments/assets/a14eaf8b-f00d-4a91-9daf-f96d76922592" />
+
+
 Solutions:
+I ran a profiling query that checks the total row count, the number of non-NULL values, the number and percentage of zero values, and the minimum and maximum quantity after casting to INT. The cast succeeded for every row, which confirms that all values are whole numbers. Zeros were treated as valid “out of stock” levels rather than errors, because they sit naturally at the start of the distribution and, unlike placeholder codes such as 608 in quantity, they do not stand apart from the rest of the data.
+
 ### last_stock_update
+
 Problem:
+This sample appears consistent: all values ​​follow the DD.MM.YYYY format, with leading zeros and a dot as a separator. The range—roughly May 2023 to December 2024—is realistic (there are no dates from the distant future or from the year 1900). The first number frequently exceeds 12 (e.g., 25.01.2024, 31.08.2024, 28.12.2023), which confirms the format is DD.MM rather than MM.DD.
+
+```
+
+```
+
 Solutions:
