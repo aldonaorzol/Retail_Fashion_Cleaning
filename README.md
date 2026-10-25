@@ -338,7 +338,11 @@ Solutions:
 - Impossible values accounted for 0.62% of all records, so I decided to replace them with NULL rather than delete the rows.
 
 ### discount_pct
+
 Problem: 
+The discount_pct column was corrupted in 49.2% of records. The column contains dates, values ​​of 0.0, and NULLs. It is 	.....
+Check that valid values fall between 0 and 100
+
 ```
 SELECT
     COUNT(*) AS total,
@@ -384,10 +388,24 @@ Solution:
 - I decided to replace month names with numerical values. I am aware that this approach may introduce inaccuracies because a value such as "09.Mar" could be interpreted as either 09.30 or 09.03.
 
 ### status
+
 Problem:
+The status column contained the same order status written in many different ways: SHIP, shipped, SHIPPED, DONE, done, Done, complete, Completed, COMPLETED, CANCELLED. The inconsistent spelling and capitalization split each status into several categories, which made counting and grouping orders by status unreliable.
+
+```
+CREATE VIEW status_cl AS
+SELECT *,
+    CASE
+	WHEN UPPER(TRIM(status)) IN ('SHIP', 'SHIPPED')                THEN 'Shipped'
+	WHEN UPPER(TRIM(status)) IN ('DONE', 'COMPLETE', 'COMPLETED')  THEN 'Completed'
+	WHEN UPPER(TRIM(STATUS)) IN ('CANCELLED')                      THEN 'Cancelled'
+    END AS status_cl
+FROM discount_cl;
+```
+
 Solutions:
-
-
+- I standardized the column into three consistent statuses (Shipped, Completed, Cancelled) using a CASE expression.
+- Each value is first normalized with UPPER(TRIM(status)), so the mapping does not depend on capitalization or stray spaces.
 
 <h2 align="center">TABLE products</h2>
 
