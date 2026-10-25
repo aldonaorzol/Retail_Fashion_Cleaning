@@ -265,29 +265,12 @@ FROM dedup_orders;
 - Using the code '^(0[1-9]|[12]\d|3[01]).(0[1-9]|1[0-2]).\d{4}$', I excluded invalid dates such as 2024-13-40.
 - I standardized the date format to YYYY-MM-DD using the CASE function.
 
-### UNIQUE CUSTOMER IDENTIFIER - customer_id
-***Problem:***
-
-```
-SELECT
-    COUNT(*) AS all_rows,
-    COUNT(customer_id) AS non_null,
-    COUNT(DISTINCT customer_id) AS unique_ids,
-    MIN(customer_id::INT) AS min_id,
-    MAX(customer_id::INT) AS max_id
-FROM sales_orders;
-```
-<img width="421" height="71" alt="image" src="https://github.com/user-attachments/assets/9b5b0d8a-5c46-406a-bf72-016a410de22a" />
-
-***Solutions:***
-- The customer_id column contains no NULL values (260,780 rows, all non-null).
-- It contains 59,200 unique values in the range 1–59,999, so it is not unique.
-- There are gaps in the ID range (about 799 missing numbers).
-
 ### DATA STANDARDIZATION - country
 
 ***Problem:***
 The country column in the orders data contained the same country written in many different ways: codes (PL, DE), full names (Poland, Germany), local-language names (Polska, Deutschland), alternative names (Holland, Czechia) and inconsistent capitalization or stray spaces. This made grouping and reporting by country unreliable, since one country was split across several categories.
+
+***Solutions:***
 
 ```
 CREATE VIEW clear_country AS
@@ -306,7 +289,6 @@ SELECT *,
     END AS clear_country
 FROM order_date_val;
 ```
-***Solutions:***
 - I built a CASE expression that maps every variant to a single standardized country name.
 - Each value is first normalized with UPPER(TRIM(country)), so the mapping does not depend on capitalization or leading/trailing spaces.
 
