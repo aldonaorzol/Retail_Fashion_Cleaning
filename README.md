@@ -146,22 +146,23 @@ The data includes unrealistic values such as zero prices, outliers, impossible d
 
 <h2 align="center">TABLE sales_orders</h2>
 
-### DEDUPLICATION - order_id 
+### DEDUPLICATION - order_id and customer_id
 
 ***Problem:***
 The dataset contained duplicate records identified by the same order_id. Duplicate orders could lead to inaccurate reporting, including overstated sales volumes, revenue, and order counts. To ensure data quality and reliable analysis, duplicate records needed to be identified and removed.
 
 ```
 CREATE VIEW dedup_orders AS
-WITH dedup_orders AS (
+WITH ranked AS (
     SELECT *,
-       ROW_NUMBER() OVER ( PARTITION BY order_id
-	   ORDER BY order_id
-    ) AS rn
+           ROW_NUMBER() OVER (
+               PARTITION BY order_id, customer_id
+               ORDER BY order_id, customer_id
+           ) AS rn
     FROM sales_orders
 )
 SELECT *
-FROM dedup_orders
+FROM ranked
 WHERE rn = 1;
 ```
 ***Solutions:***
