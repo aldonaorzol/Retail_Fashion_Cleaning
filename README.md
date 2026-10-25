@@ -1,4 +1,4 @@
-<h1 align="center">Retail_Fashion_Cleaning</h1>
+ <h1 align="center">Retail_Fashion_Cleaning</h1>
 
 ### Data analysis:
 https://github.com/aldonaorzol/Retail_Fashion_Analysis
@@ -233,9 +233,23 @@ FROM dedup_orders;
 - I standardized the date format to YYYY-MM-DD using the CASE function.
 
 ### UNIQUE CUSTOMER IDENTIFIER - customer_id
+***Problem:***
 
+```
+SELECT
+    COUNT(*) AS all_rows,
+    COUNT(customer_id) AS non_null,
+    COUNT(DISTINCT customer_id) AS unique_ids,
+    MIN(customer_id::INT) AS min_id,
+    MAX(customer_id::INT) AS max_id
+FROM sales_orders;
+```
+<img width="421" height="71" alt="image" src="https://github.com/user-attachments/assets/9b5b0d8a-5c46-406a-bf72-016a410de22a" />
 
-No changes are required.
+***Solutions:***
+- The customer_id column contains no NULL values (260,780 rows, all non-null).
+- It contains 59,200 unique values in the range 1–59,999, so it is not unique and acts as a foreign key (one customer has multiple records, about 4.4 on average).
+- There are gaps in the ID range (about 799 missing numbers).
 
 ### DATA STANDARDIZATION - country
 
