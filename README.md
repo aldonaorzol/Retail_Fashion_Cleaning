@@ -152,18 +152,18 @@ The data includes unrealistic values such as zero prices, outliers, impossible d
 The dataset contained duplicate records identified by the same order_id. Duplicate orders could lead to inaccurate reporting, including overstated sales volumes, revenue, and order counts. To ensure data quality and reliable analysis, duplicate records needed to be identified and removed.
 
 ```
-CREATE VIEW dedup_orders AS
+CREATE OR REPLACE VIEW dedup AS
 WITH ranked AS (
     SELECT *,
            ROW_NUMBER() OVER (
                PARTITION BY order_id, customer_id
                ORDER BY order_id, customer_id
-           ) AS rn
-    FROM sales_orders
+           ) AS rnn
+    FROM status_cl
 )
 SELECT *
 FROM ranked
-WHERE rn = 1;
+WHERE rnn = 1;
 ```
 ***Solutions:***
 * Groups records by order_id using PARTITION BY order_id.
