@@ -582,12 +582,12 @@ SELECT *,
     END AS clear_country
 FROM dedup_id;
 ```
-***Solutions:***
+
 - I created a view (warehouse_country_cl) with a CASE expression that maps every variant to a single standardized country name.
 - Each value is first normalized with UPPER(TRIM(country)), so the mapping does not depend on capitalization or leading/trailing spaces. IN (...) lists group all known variants of a country under one label.
 - The original column is kept next to the new clear_country column, so the cleaning stays transparent and auditable, and the raw table is never modified.
 
-### last_stock_update
+### DATE FORMAT STANDARDIZATION - last_stock_update
 
 ***Problem:***
 - The column is stored as text, so the database does not enforce a date format.
