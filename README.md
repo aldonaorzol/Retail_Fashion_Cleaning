@@ -538,20 +538,49 @@ FROM inventory;
 
 ***Solutions:***
 
+```
+CREATE VIEW dedup_id AS
+WITH dedup_id AS (
+SELECT *,
+   ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY product_id
+   ) AS rn
+FROM inventory
+)
+SELECT *
+FROM dedup_id
+WHERE rn = 1;
+```
+
+- Groups records by product_id using PARTITION BY product_id.
+- Assigns a sequential number (rn) to each row within the same product_id group using the ROW_NUMBER() function.
+- The first occurrence of each product_id receives rn = 1, while subsequent duplicates receive rn = 2, rn = 3, etc.
+- The WHERE rn = 1 filter keeps only the first occurrence of each product.
 
 ### DATA STANDARDIZATION - warehouse_country
+
 Problem:
-The country column in the inventory table described the same warehouse location in many different ways: ISO codes (PL, DE, CZ), full English names (Poland, Germany), local-language names (Polska, Deutschland), alternative names (Czechia) and inconsistent capitalization or stray spaces. One country was therefore split across several categories, which made grouping and reporting stock by country unreliable.
+The country column in the inventory table described the same warehouse location in many different ways: codes (PL, DE, CZ), full English names (Poland, Germany), local-language names (Polska, Deutschland), alternative names (Czechia) and inconsistent capitalization or stray spaces. One country was therefore split across several categories, which made grouping and reporting stock by country unreliable.
+
+```
+SELECT DISTINCT warehouse_country, COUNT (warehouse_country)
+FROM inventory
+GROUP BY warehouse_country;
+```
+
+<img width="243" height="443" alt="image" src="https://github.com/user-attachments/assets/94eaf4f1-af9b-4aef-ad1e-943a2dde88a4" />
+
+
+***Solutions:***
 
 ```
 CREATE VIEW warehouse_country_cl AS
 SELECT *,
     CASE
-        WHEN UPPER(TRIM(country)) IN ('CZ', 'CZECH', 'CZECHIA', 'CZECH REPUBLIC') THEN 'The Czech Republic'
-        WHEN UPPER(TRIM(country)) IN ('DE', 'GER', 'GERMANY', 'DEUTSCHLAND')      THEN 'Germany'
-        WHEN UPPER(TRIM(country)) IN ('PL', 'POL', 'POLAND', 'POLSKA')            THEN 'Poland'
+        WHEN UPPER(TRIM(warehouse_country)) IN ('CZ', 'CZECH', 'CZECHIA', 'CZECH REPUBLIC') THEN 'The Czech Republic'
+        WHEN UPPER(TRIM(warehouse_country)) IN ('DE', 'GER', 'GERMANY', 'DEUTSCHLAND')      THEN 'Germany'
+        WHEN UPPER(TRIM(warehouse_country)) IN ('PL', 'POL', 'POLAND', 'POLSKA')            THEN 'Poland'
     END AS clear_country
-FROM inventory;
+FROM dedup_id;
 ```
 ***Solutions:***
 - I created a view (warehouse_country_cl) with a CASE expression that maps every variant to a single standardized country name.
