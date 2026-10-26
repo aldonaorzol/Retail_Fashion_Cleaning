@@ -587,28 +587,6 @@ FROM dedup_id;
 - Each value is first normalized with UPPER(TRIM(country)), so the mapping does not depend on capitalization or leading/trailing spaces. IN (...) lists group all known variants of a country under one label.
 - The original column is kept next to the new clear_country column, so the cleaning stays transparent and auditable, and the raw table is never modified.
 
-### stock_quantity
-
-***Problem:***
-The values ​​are whole numbers, mostly ranging from 0 to approximately 570, with no text, fractions, or negative values. Structurally, it looks clean.
-Before using stock_quantity in inventory analysis, I needed to confirm that the column was complete, numeric and within a realistic range. The column was stored as TEXT, and it contained many zero values, so I had to decide whether they represent missing data or genuine stock-outs.
-
-```
-SELECT
-    COUNT(*)                                             AS all_rows,
-    COUNT(stock_quantity)                                AS non_null,
-    COUNT(*) FILTER (WHERE stock_quantity = '0')         AS zeros,
-    ROUND(100.0 * COUNT(*) FILTER (WHERE stock_quantity = '0') / COUNT(*), 2) AS zeros_pct,
-    MIN(stock_quantity::INT), MAX(stock_quantity::INT)
-FROM inventory;
-```
-
-<img width="474" height="73" alt="image" src="https://github.com/user-attachments/assets/a14eaf8b-f00d-4a91-9daf-f96d76922592" />
-
-
-***Solutions:***
-I ran a profiling query that checks the total row count, the number of non-NULL values, the number and percentage of zero values, and the minimum and maximum quantity after casting to INT. The cast succeeded for every row, which confirms that all values are whole numbers. Zeros were treated as valid “out of stock” levels rather than errors, because they sit naturally at the start of the distribution and, unlike placeholder codes such as 608 in quantity, they do not stand apart from the rest of the data.
-
 ### last_stock_update
 
 ***Problem:***
@@ -620,5 +598,7 @@ This sample appears consistent: all values ​​follow the DD.MM.YYYY format, w
 
 ***Solutions:***
 
+
+***I skipped the columns that did not require cleaning.***
 
 <h2 align="center">Results:</h2>
