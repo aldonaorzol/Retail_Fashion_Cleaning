@@ -146,7 +146,7 @@ The data includes unrealistic values such as zero prices, outliers, impossible d
 
 <h2 align="center">TABLE sales_orders</h2>
 
-### DEDUPLICATION - order_id, customer_id and product_id
+### DEDUPLICATION - order_id
 
 ***Problem order_id:***
 - The column contains no NULL values (260,780 rows, all non-null).
@@ -164,60 +164,26 @@ FROM sales_orders;
 
 <img width="426" height="69" alt="image" src="https://github.com/user-attachments/assets/adf1423f-1468-4fd1-a225-5144b83a4f45" />
 
-***Problem customer_id:***
-- The column contains no NULL values (260,780 rows, all non-null).
-- It contains 59,200 unique values in the range 1–59,999, so it is not unique.
-- There are gaps in the ID range (about 799 missing numbers).
-```
-SELECT
-    COUNT(*) AS all_rows,
-    COUNT(customer_id) AS non_null,
-    COUNT(DISTINCT customer_id) AS unique_ids,
-    MIN(customer_id::INT) AS min_id,
-    MAX(customer_id::INT) AS max_id
-FROM sales_orders;
-```
-<img width="421" height="71" alt="image" src="https://github.com/user-attachments/assets/9b5b0d8a-5c46-406a-bf72-016a410de22a" />
-
-***Problem product_id:***
-- The column contains no NULL values (260,780 rows, all non-null).
-- It contains 2,500 unique values in the range 1–2,500, so it is not unique.
-  
-```
-SELECT
-    COUNT(*) AS all_rows,
-    COUNT(product_id) AS non_null,
-    COUNT(DISTINCT product_id) AS unique_ids,
-    MIN(product_id::INT) AS min_id,
-    MAX(product_id::INT) AS max_id
-FROM sales_orders;
-```
-
-<img width="422" height="70" alt="image" src="https://github.com/user-attachments/assets/31bbfa65-8235-48f5-bb65-2be1f766c7e6" />
-
-
 ***Solutions:***
 
 ```
-CREATE OR REPLACE VIEW dedup AS
-WITH ranked AS (
+CREATE VIEW dedup_orders AS
+WITH dedup_orders AS (
     SELECT *,
-           ROW_NUMBER() OVER (
-               PARTITION BY order_id, customer_id
-               ORDER BY order_id, customer_id
-           ) AS rnn
-    FROM status_cl
+       ROW_NUMBER() OVER ( PARTITION BY order_id
+       ORDER BY order_id
+    ) AS rn
+    FROM sales_orders
 )
 SELECT *
-FROM ranked
-WHERE rnn = 1;
+FROM dedup_orders
+WHERE rn = 1;
 ```
 
-- Groups records by both order_id and customer_id using PARTITION BY order_id, customer_id.
-- Assigns a sequential number (rnn) to each row within the same (order_id, customer_id) group using the ROW_NUMBER() function.
-- The first occurrence of each order_id and customer_id combination receives rnn = 1, while subsequent duplicates receive rnn = 2, rnn = 3, etc.
-- The WHERE rnn = 1 filter keeps only the first occurrence of each combination.
-- The result is saved as a View named dedup, providing a deduplicated dataset without modifying the original source table.
+- Groups records by order_id using PARTITION BY
+- Assigns a sequential number (rn) to each row within the same group using the ROW_NUMBER() function.
+- The WHERE rn = 1 filter keeps only the first occurrence 
+- The result is saved as a View, providing a deduplicated dataset without modifying the source table.
 
 ### DATE FORMAT STANDARIZATION - order_date
 
