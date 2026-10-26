@@ -590,14 +590,44 @@ FROM dedup_id;
 ### last_stock_update
 
 ***Problem:***
-This sample appears consistent: all values ​​follow the DD.MM.YYYY format, with leading zeros and a dot as a separator. The range—roughly May 2023 to December 2024—is realistic (there are no dates from the distant future or from the year 1900). The first number frequently exceeds 12 (e.g., 25.01.2024, 31.08.2024, 28.12.2023), which confirms the format is DD.MM rather than MM.DD.
+- The column is stored as text, so the database does not enforce a date format.
+- The query returned 8 groups of values that do not match the DD.MM.YYYY pattern (20 rows in total).
+- 6 rows contain NULL values, 2 rows contain 'not_a_date', 6 rows contain 2024-13-40, 6 rows contain incomplete dates without a day
 
 ```
-
+SELECT last_stock_update, COUNT (*)
+FROM warehouse_country_cl
+WHERE last_stock_update IS NULL OR last_stock_update !~ '^\d{2}.\d{2}.\d{4}$'
+GROUP BY last_stock_update
+ORDER BY last_stock_update;
 ```
+
+<img width="235" height="245" alt="image" src="https://github.com/user-attachments/assets/16d05bd3-8747-4e53-981c-343708e3c140" />
 
 ***Solutions:***
 
+```
+CREATE  VIEW last_stock_update_cl AS
+SELECT *,
+    CASE
+	    --- DD.MM.YYYY
+        WHEN last_stock_update ~ '^(0[1-9]|[12]\d|3[01])\.(0[1-9]|1[0-2])\.\d{4}$'
+            THEN TO_DATE(last_stock_update, 'DD.MM.YYYY')
+		--- YYYY-MM-DD
+        WHEN last_stock_update ~ '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
+            THEN TO_DATE(last_stock_update, 'YYYY-MM-DD')
+		---	YYYY-MM (1st day of the month assumed)
+        WHEN last_stock_update ~ '^\d{4}-(0[1-9]|1[0-2])$'
+            THEN TO_DATE(last_stock_update || '-01', 'YYYY-MM-DD')
+		--- incorrect records (e.g. 2024-13-40, not_a_date) -> NULL	
+        ELSE NULL
+    END AS last_stock_update_cl
+FROM warehouse_country_cl;
+```
+
+- I valided dates in DD.MM.YYYY and YYYY-MM-DD formats to the DATE type.
+- I converted the 6 YYYY-MM records to the first day of the month 
+- I set invalid values (not_a_date, 2024-13-40) Keep missing values as NULL.
 
 ***I skipped the columns that did not require cleaning.***
 
