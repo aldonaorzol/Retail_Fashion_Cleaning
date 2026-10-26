@@ -188,7 +188,7 @@ WHERE rn = 1;
 ### DATE FORMAT STANDARDIZATION - order_date DODAJ format YYYY/MM/DD !!!!!
 
 ***Problem:***
-The order_date column mixed several formats (YYYY-MM-DD, YYYY/MM/DD DD-MM-YYYY, DD.MM.YYYY, YYYY-MM). Some values were also impossible dates, such as 2024-13-40.
+The order_date column mixed several text formats: YYYY-MM-DD, YYYY/MM/DD, DD-MM-YYYY, DD.MM.YYYY and YYYY-MM. Some values were also impossible dates, such as 2024-13-40.
 
 ```
 WITH parsed AS (
@@ -365,7 +365,7 @@ FROM quantity_cl;
 - I did not find any specific dependencies (e.g., the zero values were not concentrated in a particular country, product, or date).
 - Impossible values accounted for 0.62% of all records, so I decided to replace them with NULL rather than delete the rows.
 
-### DATA RECOVERY - discount_pct przerób żródło na  unit_price!!!!
+### DATA RECOVERY - discount_pct przerób żródło na  unit_price!!!! KOD DO POPRAWY !!!
 
 ***Problem:***
 The discount_pct column was corrupted in 49.2% of records. The column contains dates, values ​​of 0.0, and NULLs. 
@@ -481,6 +481,12 @@ FROM products;
 - The vast majority (95.84%) are in the correct DD.MM.YYYY format. The column is largely consistent, so there is no need for a complete overhaul—only the exceptions need to be handled.
 - There are 91 NULL values ​​(3.64%), 6 records marked as "not_a_date" 4 records in YYYY-MM-DD format, one invalid date (2024-13-40), and 3 records in YYYY-MM format (e.g., 2017-05).
 
+Proponowane sformułowanie problemu:
+
+91 NULL (3,64%), 6 rekordów not_a_date, 4 rekordy o nieistniejącej dacie 2024-13-40 (kształt YYYY-MM-DD, ale miesiąc 13 i dzień 40), 3 rekordy w formacie YYYY-MM (poprawne, bez dnia).
+
+Jedno zastrzeżenie: 95,84% to rekordy pasujące do formatu, a nie zweryfikowane jako istniejące daty. Wartość typu 31.02.2024 przeszłaby regex, a TO_DATE albo rzuci błąd, albo przesunie datę. Warto to sprawdzić, np. rzutując na DATE i łapiąc wyjątki, zanim napiszesz, że 95,84% jest “poprawne”.
+
 ```
 SELECT launch_date, COUNT(*) AS rows_count
 FROM products
@@ -516,11 +522,9 @@ SELECT *,
         END AS date_cl
 FROM products;
 ```
-- Created the view products_cl that converts the text column launch_date into a DATE column launch_date_cl.
+- Created the view that converts the text into a date.
 - Supported formats: DD.MM.YYYY, YYYY-MM-DD and YYYY-MM (the 1st day of the month is assumed).
 - Invalid and missing values (91 NULLs, 6 × not_a_date, 4 × 2024-13-40) are set to NULL.
-- The column launch_date_precision flags each record as day, month, missing or invalid, so lower-precision dates can be filtered out in analyses.
-- The original column is kept, so the source data is not modified.
 
 <h2 align="center">TABLE inventory</h2>
 
@@ -633,9 +637,10 @@ SELECT *,
 FROM warehouse_country_cl;
 ```
 
-- I valided dates in DD.MM.YYYY and YYYY-MM-DD formats to the DATE type.
-- I converted the 6 YYYY-MM records to the first day of the month 
-- I set invalid values (not_a_date, 2024-13-40) Keep missing values as NULL.
+- I validated and converted dates in DD.MM.YYYY and YYYY-MM-DD formats to the DATE type.
+- I converted the 3 YYYY-MM records to the first day of the month.
+- I set invalid values (not_a_date, 2024-13-40) to NULL.
+- Missing values were kept as NULL.
 
 ***I skipped the columns that did not require cleaning.***
 
