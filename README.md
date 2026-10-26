@@ -185,7 +185,7 @@ WHERE rn = 1;
 - The WHERE rn = 1 filter keeps only the first occurrence 
 - The result is saved as a View, providing a deduplicated dataset without modifying the source table.
 
-### DATE FORMAT STANDARIZATION - order_date
+### DATE FORMAT STANDARDIZATION - order_date
 
 ***Problem:***
 The order_date column mixed several formats (YYYY-MM-DD, YYYY/MM/DD, DD-MM-YYYY, DD.MM.YYYY, YYYY-MM). Some values were also impossible dates, such as 2024-13-40.
@@ -233,11 +233,11 @@ SELECT *,
         WHEN order_date ~ '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
             THEN TO_DATE(order_date, 'YYYY-MM-DD')
 
-        -- YYYY-MM (ustawiamy 1. dzień miesiąca)
+        -- YYYY-MM (I set the 1st day of the month)
         WHEN order_date ~ '^\d{4}-(0[1-9]|1[0-2])$'
             THEN TO_DATE(order_date || '-01', 'YYYY-MM-DD')
 
-        -- błędne rekordy (np. 2024-13-40) -> NULL
+        -- incorrect records (e.g. 2024-13-40) -> NULL
         ELSE NULL
     END AS order_date_val
 FROM dedup_orders;
@@ -468,14 +468,11 @@ FROM products;
 - I ran a single profiling query that checks the row count, the number of non-NULL values, the number of distinct values, and the minimum and maximum ID
 - The column required no cleaning.
   
-### launch_date
+### DATE FORMAT STANDARDIZATION - launch_date
 
 ***Problem:***
-- The query returned 6 groups of values that do not match the expected DD.MM.YYYY pattern (103 rows in total).
-- 91 rows contain NULL values (missing launch date).
-- 6 rows contain the text not_a_date, which is not a date at all.
-- 4 rows contain 2024-13-40, which looks like a date but is invalid (month 13, day 40).
-- 3 rows contain incomplete dates without a day: 2024-07, 2020-01 and 2017-05 (1 row each, YYYY-MM format).
+- The vast majority (95.84%) are in the correct DD.MM.YYYY format. The column is largely consistent, so there is no need for a complete overhaul—only the exceptions need to be handled.
+- There are 91 NULL values ​​(3.64%), 6 records marked as "not_a_date" 4 records in YYYY-MM-DD format, one invalid date (2024-13-40), and 3 records in YYYY-MM format (e.g., 2017-05).
 
 ```
 SELECT launch_date, COUNT(*) AS rows_count
@@ -488,39 +485,59 @@ ORDER BY rows_count DESC;
 
 <img width="233" height="188" alt="image" src="https://github.com/user-attachments/assets/8f3941fe-188b-4640-9165-19d20e2b1356" />
 
-```
-SELECT
-    CASE
-        WHEN launch_date ~ '^\d{2}\.\d{2}\.\d{4}$' THEN 'DD.MM.YYYY'
-        WHEN launch_date ~ '^\d{2}-\d{2}-\d{4}$'   THEN 'DD-MM-YYYY'
-        WHEN launch_date ~ '^\d{4}-\d{2}-\d{2}$'   THEN 'YYYY-MM-DD'
-        WHEN launch_date ~ '^\d{4}/\d{2}/\d{2}$'   THEN 'YYYY/MM/DD'
-        WHEN launch_date ~ '^\d{4}-\d{2}$'         THEN 'YYYY-MM'
-        WHEN launch_date IS NULL                   THEN 'NULL'
-        ELSE 'other'
-    END AS format,
-    COUNT(*) AS cnt,
-    MIN(launch_date) AS example
-FROM products
-GROUP BY 1
-ORDER BY cnt DESC;
-```
-
-<img width="269" height="167" alt="image" src="https://github.com/user-attachments/assets/9bef0570-40f1-454a-b4e1-6e0a07899d3e" />
-
 
 ***Solutions:***
-- Zdecydowana większość (95,84%) jest poprawna w formacie DD.MM.YYYY. Kolumna jest prawie spójna, więc nie trzeba jej przebudowywać, tylko obsłużyć wyjątki.
-- 91 NULL-i (3,64%) to braki. Zostaw je jako NULL, ale odnotuj skalę. To najliczniejszy problem.
-- 6 rekordów other: przykład not_a_date to jawnie błędny tekst. Zamień na NULL.
-- 4 rekordy YYYY-MM-DD: przykład 2024-13-... wygląda na niemożliwą datę (miesiąc 13). Regex formatu je złapał, ale TO_DATE je odrzuci, więc część z nich (lub wszystkie) będzie NULL. Sprawdź je ręcznie.
-- 3 rekordy YYYY-MM (np. 2017-05): da się sparsować na 1. dzień miesiąca, ale mają niższą precyzję, więc oznacz je flagą.
+
+```
+CREATE OR REPLACE VIEW date_cl AS
+SELECT *,
+    CASE
+        -- DD.MM.YYYY
+        WHEN launch_date ~ '^(0[1-9]|[12]\d|3[01])\.(0[1-9]|1[0-2])\.\d{4}$'
+            THEN TO_DATE(launch_date, 'DD.MM.YYYY')
+
+        -- YYYY-MM-DD
+        WHEN launch_date ~ '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
+            THEN TO_DATE(launch_date, 'YYYY-MM-DD')
+
+        -- YYYY-MM (1st day of the month assumed)
+        WHEN launch_date ~ '^\d{4}-(0[1-9]|1[0-2])$'
+            THEN TO_DATE(launch_date || '-01', 'YYYY-MM-DD')
+
+        -- incorrect records (e.g. 2024-13-40, not_a_date) -> NULL
+        ELSE NULL
+        END AS date_cl
+FROM products;
+```
+- Created the view products_cl that converts the text column launch_date into a DATE column launch_date_cl.
+- Supported formats: DD.MM.YYYY, YYYY-MM-DD and YYYY-MM (the 1st day of the month is assumed).
+- Invalid and missing values (91 NULLs, 6 × not_a_date, 4 × 2024-13-40) are set to NULL.
+- The column launch_date_precision flags each record as day, month, missing or invalid, so lower-precision dates can be filtered out in analyses.
+- The original column is kept, so the source data is not modified.
 
 <h2 align="center">TABLE inventory</h2>
 
 ### DEDUPLICATION - product_id
+
 ***Problem:***
-Solutions:
+- The column contains no NULL values (3,741 rows, all non-null).
+- It contains 2,500 unique values, so it is not unique (1,241 duplicated rows).
+- The column is stored as text, so MIN and MAX are compared alphabetically ('1' to '999')
+  
+```
+SELECT 
+COUNT(*) AS all_records,
+COUNT(product_id) AS without_null,
+COUNT(DISTINCT product_id) AS unique_ids,
+MIN(product_id),
+MAX (product_id)
+FROM inventory;
+```
+
+<img width="419" height="69" alt="image" src="https://github.com/user-attachments/assets/d5348b17-a00c-47a6-8cf4-21d9286ae2ab" />
+
+***Solutions:***
+
 
 ### DATA STANDARDIZATION - warehouse_country
 Problem:
