@@ -700,6 +700,19 @@ WHERE rn = 1;
 ```
 ## Products
 
+```
+SELECT 
+product_id::INT AS product_id,
+category,
+sub_category,
+base_price::DECIMAL AS base_price,
+date_cl AS launch_date
+FROM date_cl
+```
+
+<img width="500" height="418" alt="image" src="https://github.com/user-attachments/assets/aa854f03-cdd5-4289-b02c-c1c120d80747" />
+
+
 ## Inventory
 
 
