@@ -690,7 +690,9 @@ FROM dedup_id;
 SELECT 
 order_id::INT AS order_id,
 order_date_val AS order_date,
+customer_id::INT AS customer_id,
 clear_country AS country,
+product_id::INT AS product_id,
 quantity_cl::INT AS quantity,
 unit_price_cl::DECIMAL AS unit_price,
 discount_clean::DECIMAL AS discount,
@@ -699,7 +701,8 @@ FROM status_cl
 WHERE rn = 1;
 ```
 
-<img width="645" height="415" alt="image" src="https://github.com/user-attachments/assets/a2901a31-ae83-4bbe-a672-8cfae4b9841a" />
+<img width="856" height="415" alt="image" src="https://github.com/user-attachments/assets/bc5b1eca-fd8d-4176-8e47-8a53f396a06f" />
+
 
 
 ## Products
