@@ -595,7 +595,7 @@ FROM inventory;
 - Each value is first normalized with UPPER(TRIM(warehouse_country)), so the mapping does not depend on capitalization or leading/trailing spaces. IN (...) lists group all known variants of a country under one label.
 - The original column is kept next to the new clear_country column, so the cleaning stays transparent and auditable, and the raw table is never modified.
 
-### DEDUPLICATION - product_id  !!!! uwzględnij warehouse_country !!!
+### DEDUPLICATION - product_id 
 
 ***Problem:***
 - The column contains no NULL values (3,741 rows, all non-null).
