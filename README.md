@@ -185,31 +185,39 @@ WHERE rn = 1;
 - The WHERE rn = 1 filter keeps only the first occurrence 
 - The result is saved as a View, providing a deduplicated dataset without modifying the source table.
 
-### DATE FORMAT STANDARDIZATION - order_date DODAJ format YYYY/MM/DD !!!!!
+### DATE FORMAT STANDARDIZATION - order_date 
 
 ***Problem:***
-The order_date column mixed several text formats: YYYY-MM-DD, YYYY/MM/DD, DD-MM-YYYY, DD.MM.YYYY and YYYY-MM. Some values were also impossible dates, such as 2024-13-40.
+The order_date column mixed several text formats: YYYY-MM-DD, YYYY/MM/DD, DD-MM-YYYY, DD.MM.YYYY and YYYY-MM. Some values were also impossible dates, such as 2024-13-40. 
 
 ```
 WITH parsed AS (
     SELECT
+        order_date,
         CASE
             -- DD.MM.YYYY lub DD-MM-YYYY
             WHEN order_date ~ '^(0[1-9]|[12]\d|3[01])[.-](0[1-9]|1[0-2])[.-]\d{4}$'
-                THEN TO_DATE(order_date, 'DD-MM-YYYY')
+                THEN TO_DATE(REPLACE(order_date, '.', '-'), 'DD-MM-YYYY')
+
             -- YYYY-MM-DD
             WHEN order_date ~ '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
                 THEN TO_DATE(order_date, 'YYYY-MM-DD')
+
+            -- YYYY/MM/DD
+            WHEN order_date ~ '^\d{4}/(0[1-9]|1[0-2])/(0[1-9]|[12]\d|3[01])$'
+                THEN TO_DATE(order_date, 'YYYY/MM/DD')
+
             -- YYYY-MM
             WHEN order_date ~ '^\d{4}-(0[1-9]|1[0-2])$'
                 THEN TO_DATE(order_date || '-01', 'YYYY-MM-DD')
-        ELSE NULL
+
+            ELSE NULL
         END AS order_date_val
     FROM dedup_orders
 )
 SELECT
-    COUNT(*)                                                      AS all_values,
-    COUNT(*) - COUNT(order_date_val)                              AS null_values,
+    COUNT(*)                                                        AS all_values,
+    COUNT(*) - COUNT(order_date_val)                                AS null_values,
     ROUND(100.0 * (COUNT(*) - COUNT(order_date_val)) / COUNT(*), 2) AS percentage_of_all_nulls
 FROM parsed;
 ```
@@ -219,7 +227,7 @@ FROM parsed;
 ***Solutions:***
 
 ```
-CREATE VIEW order_date_val AS
+CREATE VIEW orders_clean AS
 SELECT *,
     CASE
         -- DD.MM.YYYY
@@ -234,20 +242,36 @@ SELECT *,
         WHEN order_date ~ '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
             THEN TO_DATE(order_date, 'YYYY-MM-DD')
 
+        -- YYYY/MM/DD 
+        WHEN order_date ~ '^\d{4}/(0[1-9]|1[0-2])/(0[1-9]|[12]\d|3[01])$'
+            THEN TO_DATE(order_date, 'YYYY/MM/DD')
+
         -- YYYY-MM (I set the 1st day of the month)
         WHEN order_date ~ '^\d{4}-(0[1-9]|1[0-2])$'
             THEN TO_DATE(order_date || '-01', 'YYYY-MM-DD')
 
         -- incorrect records (e.g. 2024-13-40) -> NULL
         ELSE NULL
-    END AS order_date_val
+    END AS order_date_val,
+
+    CASE
+        -- a genuine absence in the source (distinguishing it from unrecognized values)
+        WHEN order_date IS NULL THEN 'source_null'
+        WHEN order_date ~ '^(0[1-9]|[12]\d|3[01])\.(0[1-9]|1[0-2])\.\d{4}$' THEN 'dd.mm.yyyy'
+        WHEN order_date ~ '^(0[1-9]|[12]\d|3[01])-(0[1-9]|1[0-2])-\d{4}$'   THEN 'dd-mm-yyyy'
+        WHEN order_date ~ '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'   THEN 'yyyy-mm-dd'
+        WHEN order_date ~ '^\d{4}/(0[1-9]|1[0-2])/(0[1-9]|[12]\d|3[01])$'   THEN 'yyyy/mm/dd'
+        WHEN order_date ~ '^\d{4}-(0[1-9]|1[0-2])$'                         THEN 'yyyy-mm'
+        -- does not match any pattern (e.g., 2024-13-40, not_a_date)
+        ELSE 'UNRECOGNIZED'
+    END AS order_date_status
 FROM dedup_orders;
 ```
 
-- To be able to refer back to the first part of the query, I used a CTE.
-- I simulated to determine what percentage of all records contain invalid values. As shown above, this figure is 0.73%. Consequently, I left them as NULL values and excluded them from the final analysis.
-- Using the code '^(0[1-9]|[12]\d|3[01]).(0[1-9]|1[0-2]).\d{4}$', I excluded invalid dates such as 2024-13-40.
-- I standardized the date format to YYYY-MM-DD using the CASE function.
+- I used a CTE to parse dates first and then calculate the share of invalid values on top of the parsed result.
+- I measured what percentage of all records could not be converted to a date. This is 0.73% (NULL values and unrecognized formats combined), so I left them as NULL and excluded them from time-based analysis.
+- Each format was matched with a regular expression with literal dots escaped (\.), so impossible dates such as 2024-13-40 matched no pattern and became NULL.
+- I converted the text values to the DATE type using CASE (the default display format is YYYY-MM-DD).
 
 ### DATA STANDARDIZATION - country
 
@@ -475,23 +499,16 @@ FROM products;
 - I ran a single profiling query that checks the row count, the number of non-NULL values, the number of distinct values, and the minimum and maximum ID
 - The column required no cleaning.
   
-### DATE FORMAT STANDARDIZATION - launch_date zwer YYYY/MM/DD !!!!!
+### DATE FORMAT STANDARDIZATION - launch_date 
 
 ***Problem:***
-- The vast majority (95.84%) are in the correct DD.MM.YYYY format. The column is largely consistent, so there is no need for a complete overhaul—only the exceptions need to be handled.
-- There are 91 NULL values ​​(3.64%), 6 records marked as "not_a_date" 4 records in YYYY-MM-DD format, one invalid date (2024-13-40), and 3 records in YYYY-MM format (e.g., 2017-05).
-
-Proponowane sformułowanie problemu:
-
-91 NULL (3,64%), 6 rekordów not_a_date, 4 rekordy o nieistniejącej dacie 2024-13-40 (kształt YYYY-MM-DD, ale miesiąc 13 i dzień 40), 3 rekordy w formacie YYYY-MM (poprawne, bez dnia).
-
-Jedno zastrzeżenie: 95,84% to rekordy pasujące do formatu, a nie zweryfikowane jako istniejące daty. Wartość typu 31.02.2024 przeszłaby regex, a TO_DATE albo rzuci błąd, albo przesunie datę. Warto to sprawdzić, np. rzutując na DATE i łapiąc wyjątki, zanim napiszesz, że 95,84% jest “poprawne”.
+- 91 NULL values ​​(3.64%), 6 records marked as 'not_a_date', 4 records containing an invalid date—2024-13-40 (following the YYYY-MM-DD pattern, but with month 13 and day 40)—and 3 records in YYYY-MM format (valid, but lacking a day).
 
 ```
 SELECT launch_date, COUNT(*) AS rows_count
 FROM products
 WHERE launch_date IS NULL
-   OR launch_date !~ '^\d{2}.\d{2}.\d{4}$'
+   OR launch_date !~ '^\d{2}\.\d{2}\.\d{4}$'
 GROUP BY launch_date
 ORDER BY rows_count DESC;
 ```
@@ -513,6 +530,10 @@ SELECT *,
         WHEN launch_date ~ '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
             THEN TO_DATE(launch_date, 'YYYY-MM-DD')
 
+        -- YYYY/MM/DD
+        WHEN launch_date ~ '^\d{4}/(0[1-9]|1[0-2])/(0[1-9]|[12]\d|3[01])$'
+            THEN TO_DATE(launch_date, 'YYYY/MM/DD')
+
         -- YYYY-MM (1st day of the month assumed)
         WHEN launch_date ~ '^\d{4}-(0[1-9]|1[0-2])$'
             THEN TO_DATE(launch_date || '-01', 'YYYY-MM-DD')
@@ -522,13 +543,46 @@ SELECT *,
         END AS date_cl
 FROM products;
 ```
+
 - Created the view that converts the text into a date.
-- Supported formats: DD.MM.YYYY, YYYY-MM-DD and YYYY-MM (the 1st day of the month is assumed).
+- Supported formats: `DD.MM.YYYY`, `YYYY-MM-DD`, `YYYY/MM/DD` and `YYYY-MM` (the 1st day of the month is assumed).
 - Invalid and missing values (91 NULLs, 6 × not_a_date, 4 × 2024-13-40) are set to NULL.
 
 <h2 align="center">TABLE inventory</h2>
 
-### DEDUPLICATION - product_id uwzględnij warehouse_country i zamień miejscami !!!!
+### DATA STANDARDIZATION - warehouse_country
+
+Problem:
+The country column in the inventory table described the same warehouse location in many different ways: codes (PL, DE, CZ), full English names (Poland, Germany), local-language names (Polska, Deutschland), alternative names (Czechia) and inconsistent capitalization or stray spaces. One country was therefore split across several categories, which made grouping and reporting stock by country unreliable.
+
+```
+SELECT DISTINCT warehouse_country, COUNT (warehouse_country)
+FROM inventory
+GROUP BY warehouse_country;
+```
+
+<img width="243" height="443" alt="image" src="https://github.com/user-attachments/assets/94eaf4f1-af9b-4aef-ad1e-943a2dde88a4" />
+
+
+***Solutions:***
+
+```
+CREATE VIEW warehouse_country_cl AS
+SELECT *,
+    CASE
+        WHEN UPPER(TRIM(warehouse_country)) IN ('CZ', 'CZECH', 'CZECHIA', 'CZECH REPUBLIC') THEN 'The Czech Republic'
+        WHEN UPPER(TRIM(warehouse_country)) IN ('DE', 'GER', 'GERMANY', 'DEUTSCHLAND')      THEN 'Germany'
+        WHEN UPPER(TRIM(warehouse_country)) IN ('PL', 'POL', 'POLAND', 'POLSKA')            THEN 'Poland'
+    ELSE NULL
+    END AS clear_country
+FROM dedup_id;
+```
+
+- I created a view (warehouse_country_cl) with a CASE expression that maps every variant to a single standardized country name.
+- Each value is first normalized with UPPER(TRIM(warehouse_country)), so the mapping does not depend on capitalization or leading/trailing spaces. IN (...) lists group all known variants of a country under one label.
+- The original column is kept next to the new clear_country column, so the cleaning stays transparent and auditable, and the raw table is never modified.
+
+### DEDUPLICATION - product_id  !!!! uwzględnij warehouse_country !!!
 
 ***Problem:***
 - The column contains no NULL values (3,741 rows, all non-null).
@@ -567,39 +621,7 @@ WHERE rn = 1;
 - The first occurrence of each product_id receives rn = 1, while subsequent duplicates receive rn = 2, rn = 3, etc.
 - The WHERE rn = 1 filter keeps only the first occurrence of each product.
 
-### DATA STANDARDIZATION - warehouse_country
-
-Problem:
-The country column in the inventory table described the same warehouse location in many different ways: codes (PL, DE, CZ), full English names (Poland, Germany), local-language names (Polska, Deutschland), alternative names (Czechia) and inconsistent capitalization or stray spaces. One country was therefore split across several categories, which made grouping and reporting stock by country unreliable.
-
-```
-SELECT DISTINCT warehouse_country, COUNT (warehouse_country)
-FROM inventory
-GROUP BY warehouse_country;
-```
-
-<img width="243" height="443" alt="image" src="https://github.com/user-attachments/assets/94eaf4f1-af9b-4aef-ad1e-943a2dde88a4" />
-
-
-***Solutions:***
-
-```
-CREATE VIEW warehouse_country_cl AS
-SELECT *,
-    CASE
-        WHEN UPPER(TRIM(warehouse_country)) IN ('CZ', 'CZECH', 'CZECHIA', 'CZECH REPUBLIC') THEN 'The Czech Republic'
-        WHEN UPPER(TRIM(warehouse_country)) IN ('DE', 'GER', 'GERMANY', 'DEUTSCHLAND')      THEN 'Germany'
-        WHEN UPPER(TRIM(warehouse_country)) IN ('PL', 'POL', 'POLAND', 'POLSKA')            THEN 'Poland'
-    ELSE NULL
-    END AS clear_country
-FROM dedup_id;
-```
-
-- I created a view (warehouse_country_cl) with a CASE expression that maps every variant to a single standardized country name.
-- Each value is first normalized with UPPER(TRIM(country)), so the mapping does not depend on capitalization or leading/trailing spaces. IN (...) lists group all known variants of a country under one label.
-- The original column is kept next to the new clear_country column, so the cleaning stays transparent and auditable, and the raw table is never modified.
-
-### DATE FORMAT STANDARDIZATION - last_stock_update zwer YYYY/MM/DD !!!!!
+### DATE FORMAT STANDARDIZATION - last_stock_update
 
 ***Problem:***
 - The column is stored as text, so the database does not enforce a date format.
@@ -607,9 +629,10 @@ FROM dedup_id;
 - 6 rows contain NULL values, 2 rows contain 'not_a_date', 6 rows contain 2024-13-40, 6 rows contain incomplete dates without a day
 
 ```
-SELECT last_stock_update, COUNT (*)
+SELECT last_stock_update, COUNT(*) AS cnt
 FROM warehouse_country_cl
-WHERE last_stock_update IS NULL OR last_stock_update !~ '^\d{2}.\d{2}.\d{4}$'
+WHERE last_stock_update IS NULL
+   OR last_stock_update !~ '^\d{2}\.\d{2}\.\d{4}$'
 GROUP BY last_stock_update
 ORDER BY last_stock_update;
 ```
@@ -619,19 +642,22 @@ ORDER BY last_stock_update;
 ***Solutions:***
 
 ```
-CREATE  VIEW last_stock_update_cl AS
+CREATE VIEW last_stock_update_cl AS
 SELECT *,
     CASE
-	    --- DD.MM.YYYY
+        --- DD.MM.YYYY
         WHEN last_stock_update ~ '^(0[1-9]|[12]\d|3[01])\.(0[1-9]|1[0-2])\.\d{4}$'
             THEN TO_DATE(last_stock_update, 'DD.MM.YYYY')
-		--- YYYY-MM-DD
+        --- YYYY-MM-DD
         WHEN last_stock_update ~ '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
             THEN TO_DATE(last_stock_update, 'YYYY-MM-DD')
-		---	YYYY-MM (1st day of the month assumed)
+        --- YYYY/MM/DD
+        WHEN last_stock_update ~ '^\d{4}/(0[1-9]|1[0-2])/(0[1-9]|[12]\d|3[01])$'
+            THEN TO_DATE(last_stock_update, 'YYYY/MM/DD')
+        --- YYYY-MM (1st day of the month assumed)
         WHEN last_stock_update ~ '^\d{4}-(0[1-9]|1[0-2])$'
             THEN TO_DATE(last_stock_update || '-01', 'YYYY-MM-DD')
-		--- incorrect records (e.g. 2024-13-40, not_a_date) -> NULL	
+        --- incorrect records (e.g. 2024-13-40, not_a_date) -> NULL
         ELSE NULL
     END AS last_stock_update_cl
 FROM warehouse_country_cl;
