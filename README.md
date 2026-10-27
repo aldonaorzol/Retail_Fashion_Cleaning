@@ -683,7 +683,7 @@ FROM dedup_id;
 
 ***I skipped the columns that did not require cleaning.***
 
-### Preparing tables to POWER BI
+<h2 align="center">Preparing tables to POWER BI</h2> 
 ## Sales_order
 
 ```
