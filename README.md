@@ -304,7 +304,7 @@ SELECT *,
         WHEN UPPER(TRIM(country)) IN ('SK', 'SLOVAK', 'SLOVAKIA')                 THEN 'Slovakia'
     ELSE NULL
     END AS clear_country
-FROM order_date_val;
+FROM orders_clean;
 ```
 - I built a CASE expression that maps every variant to a single standardized country name.
 - Each value is first normalized with UPPER(TRIM(country)), so the mapping does not depend on capitalization or leading/trailing spaces.
@@ -327,14 +327,14 @@ SELECT
         / COUNT(*),
         2
     ) AS outlier_percentage
-FROM clear_country;
+FROM sales_orders; 
 ```
 
 <img width="352" height="71" alt="image" src="https://github.com/user-attachments/assets/63805611-6d82-4022-a226-527b2c870dce" />
 
 ```
 SELECT quantity, COUNT(*)
-FROM clear_country
+FROM sales_orders
 GROUP BY quantity
 ORDER BY 2 DESC;
 ```
@@ -350,7 +350,7 @@ SELECT *,
         WHEN quantity IN ('0', '608') THEN NULL
         ELSE quantity
     END AS quantity_cl
-FROM clear_country;
+FROM clear_country; 
 ```
 
 - Calculated the percentage of records containing outlier values (quantity = 608 and quantity = 0) to assess their impact on the dataset.
@@ -359,7 +359,7 @@ FROM clear_country;
 ### REPLACING INVALID VALUES WITH NULL - unit_price
 
 ***Problem:***
-The column contains zero values, which is an incorrect value for unit prices.
+The column contains zero values, which is an incorrect value for unit prices. It also contained 8 values (< 0.01% of 260,780 rows) stored as dates (e.g. 28.mar, 30.sty) instead of numbers.
 
 ```
 SELECT
@@ -374,22 +374,35 @@ FROM quantity_cl;
 
 <img width="377" height="68" alt="image" src="https://github.com/user-attachments/assets/4ab0be09-8bb0-4f89-8238-e4fb10d496d4" />
 
+```
+SELECT order_id, unit_price
+FROM sales_orders
+WHERE unit_price !~ '^\d+(\.\d+)?$';
+```
+
+<img width="200" height="248" alt="image" src="https://github.com/user-attachments/assets/164e95ff-63a0-4447-95cf-9ef4cfcdd5f8" />
+
+
 ***Solutions:***
 
 ```
 CREATE VIEW unit_price_cl AS
 SELECT *,
     CASE
+     -- non-numeric values ​​e.g., 28.mar, 30.sty -> NULL
+     WHEN unit_price !~ '^\d+(\.\d+)?$' THEN NULL
+    -- price 0.0 -> NULL
 	WHEN unit_price = '0.0' THEN NULL
 	ELSE unit_price
 	END AS unit_price_cl
-FROM quantity_cl;
+FROM quantity_cl; 
 ```
+    
 
 - I did not find any specific dependencies (e.g., the zero values were not concentrated in a particular country, product, or date).
 - Impossible values accounted for 0.62% of all records, so I decided to replace them with NULL rather than delete the rows.
 
-### DATA RECOVERY - discount_pct przerób żródło na  unit_price!!!! KOD DO POPRAWY !!!
+### DATA RECOVERY - discount_pct 
 
 ***Problem:***
 The discount_pct column was corrupted in 49.2% of records. The column contains dates, values ​​of 0.0, and NULLs. 
@@ -399,7 +412,7 @@ SELECT
     COUNT(*) AS total,
     COUNT(*) FILTER (WHERE discount_pct !~ '^\d+(\.\d+)?$') AS corrupted,
     ROUND(100.0 * COUNT(*) FILTER (WHERE discount_pct !~ '^\d+(\.\d+)?$') / COUNT(*), 2) AS pct
-FROM quantity_cl
+FROM sales_orders
 WHERE discount_pct IS NOT NULL;
 ```
 <img width="264" height="70" alt="image" src="https://github.com/user-attachments/assets/b9d35beb-dd8d-4f9d-8086-fff854f53216" />
@@ -411,7 +424,7 @@ WHERE discount_pct IS NOT NULL;
 CREATE VIEW discount_cl AS
 SELECT *,
     CASE
-        -- zwykłe liczby
+        -- ordinary numbers
         WHEN discount_pct ~ '^\d+(\.\d+)?$' THEN discount_pct::NUMERIC
 
         -- DD.mon  ->  D.MM  (np. 09.mar -> 9.03)
@@ -434,7 +447,7 @@ SELECT *,
              END
              || '.' || SPLIT_PART(discount_pct, '.', 2))::NUMERIC
     END AS discount_clean
-FROM quantity_cl;
+FROM unit_price_cl;
 ```
 
 Check that valid values fall between 0 and 100
@@ -669,5 +682,24 @@ FROM warehouse_country_cl;
 - Missing values were kept as NULL.
 
 ***I skipped the columns that did not require cleaning.***
+
+Preparing data table
+Sales_order
+
+```
+SELECT 
+order_id::INT AS order_id,
+order_date_val AS order_date,
+clear_country AS country,
+quantity_cl::INT AS quantity,
+unit_price_cl::DECIMAL AS unit_price,
+discount_clean::DECIMAL AS discount,
+status_cl AS status
+FROM status_cl
+WHERE rn = 1;
+```
+
+<img width="645" height="415" alt="image" src="https://github.com/user-attachments/assets/a2901a31-ae83-4bbe-a672-8cfae4b9841a" />
+
 
 <h2 align="center">Results:</h2>
