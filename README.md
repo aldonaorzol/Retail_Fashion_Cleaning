@@ -683,8 +683,8 @@ FROM warehouse_country_cl;
 
 ***I skipped the columns that did not require cleaning.***
 
-Preparing data table
-Sales_order
+### Preparing tables to POWER BI
+## Sales_order
 
 ```
 SELECT 
@@ -698,6 +698,10 @@ status_cl AS status
 FROM status_cl
 WHERE rn = 1;
 ```
+## Products
+
+## Inventory
+
 
 <img width="645" height="415" alt="image" src="https://github.com/user-attachments/assets/a2901a31-ae83-4bbe-a672-8cfae4b9841a" />
 
