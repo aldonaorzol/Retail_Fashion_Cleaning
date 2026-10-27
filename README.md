@@ -588,7 +588,7 @@ SELECT *,
         WHEN UPPER(TRIM(warehouse_country)) IN ('PL', 'POL', 'POLAND', 'POLSKA')            THEN 'Poland'
     ELSE NULL
     END AS clear_country
-FROM dedup_id;
+FROM inventory;
 ```
 
 - I created a view (warehouse_country_cl) with a CASE expression that maps every variant to a single standardized country name.
@@ -620,9 +620,9 @@ FROM inventory;
 CREATE VIEW dedup_id AS
 WITH dedup_id AS (
 SELECT *,
-   ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY product_id
+   ROW_NUMBER() OVER (PARTITION BY product_id, clear_country ORDER BY product_id
    ) AS rn
-FROM inventory
+FROM warehouse_country_cl
 )
 SELECT *
 FROM dedup_id
@@ -643,7 +643,7 @@ WHERE rn = 1;
 
 ```
 SELECT last_stock_update, COUNT(*) AS cnt
-FROM warehouse_country_cl
+FROM inventory
 WHERE last_stock_update IS NULL
    OR last_stock_update !~ '^\d{2}\.\d{2}\.\d{4}$'
 GROUP BY last_stock_update
@@ -673,7 +673,7 @@ SELECT *,
         --- incorrect records (e.g. 2024-13-40, not_a_date) -> NULL
         ELSE NULL
     END AS last_stock_update_cl
-FROM warehouse_country_cl;
+FROM dedup_id;
 ```
 
 - I validated and converted dates in DD.MM.YYYY and YYYY-MM-DD formats to the DATE type.
@@ -698,6 +698,10 @@ status_cl AS status
 FROM status_cl
 WHERE rn = 1;
 ```
+
+<img width="645" height="415" alt="image" src="https://github.com/user-attachments/assets/a2901a31-ae83-4bbe-a672-8cfae4b9841a" />
+
+
 ## Products
 
 ```
@@ -715,8 +719,18 @@ FROM date_cl
 
 ## Inventory
 
+```
+SELECT
+product_id::INT AS product_id,
+clear_country AS warehouse_country,
+stock_quantity::INT AS stock_quantity,
+last_stock_update_cl AS last_stock_update
+FROM last_stock_update_cl
+WHERE rn = 1;
+```
 
-<img width="645" height="415" alt="image" src="https://github.com/user-attachments/assets/a2901a31-ae83-4bbe-a672-8cfae4b9841a" />
+<img width="508" height="416" alt="image" src="https://github.com/user-attachments/assets/fb6b9115-5bd5-44c0-a3e4-86f5e75a286d" />
+
 
 
 <h2 align="center">Results:</h2>
