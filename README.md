@@ -512,7 +512,7 @@ FROM products;
 - I ran a single profiling query that checks the row count, the number of non-NULL values, the number of distinct values, and the minimum and maximum ID
 - The column required no cleaning.
   
-### DATE FORMAT STANDARDIZATION - launch_date 
+### DATE FORMAT STANDARDIZATION - launch_date kolumna nie potrzebna do analizy do usunięcia !!!!!
 
 ***Problem:***
 - 91 NULL values ​​(3.64%), 6 records marked as 'not_a_date', 4 records containing an invalid date—2024-13-40 (following the YYYY-MM-DD pattern, but with month 13 and day 40)—and 3 records in YYYY-MM format (valid, but lacking a day).
