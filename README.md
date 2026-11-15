@@ -7,21 +7,38 @@ This notebook covers the first phase of the Retail_Fashion project: data cleanin
 ### Tools: 
 PostgreSQL, Microsoft Excel,  Copilot, Claude
 
-### Data Structure
-
-
-
-
 ### Description:
 
 The source data contained numerous data quality issues, including inconsistent formats, duplicate records, missing values, and invalid entries. Using SQL, I performed data profiling, data cleansing, and data validation tasks as part of the ETL workflow to enhance data integrity and prepare the datasets for reliable business analysis and reporting. The process included standardizing country names, validating numerical fields, identifying potential outliers, converting data types, standardizing formats, and verifying consistency across sales, product, and inventory datasets. Additional data quality checks were conducted to ensure data accuracy, completeness, and compliance with business rules.
+
+### Data Structure
+
+<img width="710" height="195" alt="image" src="https://github.com/user-attachments/assets/e167ee3c-b875-4515-b690-a402148b2ef1" />
+
+
+<img width="741" height="550" alt="image" src="https://github.com/user-attachments/assets/7d1a5270-c555-4ee8-8cba-39b0323e22c6" />
+
+<img width="745" height="370" alt="image" src="https://github.com/user-attachments/assets/d3d8487a-d9e8-42c4-99ca-b7278bce2bae" />
+
+<img width="743" height="292" alt="image" src="https://github.com/user-attachments/assets/7ce36456-83c3-4cc6-ad0e-e80841a5e884" />
+
 
 Kontekst biznesowy 
 
 Charakterystyka danych
 
-Problemy biznesowe coś w tym stylu 
 
+
+Main Data Cleaning Areas
+* Data type casting (dates, numerics).
+* Standardization of country names and discount formats.
+* Handling of missing values (NULL, empty strings, placeholders).
+* Duplicate order_id detection and key uniqueness checks.
+* Outlier detection in quantity and unit_price.
+* Cross-table consistency validation.
+
+
+Problemy biznesowe coś w tym stylu 
 <img width="564" height="299" alt="image" src="https://github.com/user-attachments/assets/3ba1ea8c-e2fb-46b8-a2e9-d9f1fb87befa" />
 
 Data profiling
