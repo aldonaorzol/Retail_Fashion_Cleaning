@@ -13,7 +13,9 @@ The source data contained numerous data quality issues, including inconsistent f
 
 ### Data Structure:
 
+
 <img width="710" height="195" alt="image" src="https://github.com/user-attachments/assets/e167ee3c-b875-4515-b690-a402148b2ef1" />
+
 
 ### Variable types:
 __Identifiers:__ order_id, customer_id, product_id;
@@ -27,6 +29,7 @@ __Temporal:__ order_date, launch_date, last_stock_update;
 
 <img width="741" height="550" alt="image" src="https://github.com/user-attachments/assets/7d1a5270-c555-4ee8-8cba-39b0323e22c6" />
 
+
 #### Cleaning Plan
 1. Validate completeness: row counts vs. source, missing values (NULL, blank strings, placeholders)
 2. Convert data types: dates (order_date), numerics (quantity, unit_price)
@@ -36,7 +39,9 @@ __Temporal:__ order_date, launch_date, last_stock_update;
 6. Identify and treat outliers in quantity and unit_price
 7. Validate referential integrity (product_id exists in products)
 
+
 <img width="745" height="370" alt="image" src="https://github.com/user-attachments/assets/d3d8487a-d9e8-42c4-99ca-b7278bce2bae" />
+
 
 #### Cleaning Plan
 1. Validate completeness and key uniqueness (product_id)
@@ -45,7 +50,9 @@ __Temporal:__ order_date, launch_date, last_stock_update;
 4. Check price logic: no zero or negative base_price
 5. Validate dates: launch_date within a plausible range
 
+
 <img width="743" height="292" alt="image" src="https://github.com/user-attachments/assets/7ce36456-83c3-4cc6-ad0e-e80841a5e884" />
+
 
 #### Cleaning Plan
 1. Validate completeness and key uniqueness (product_id + warehouse_country)
@@ -113,27 +120,23 @@ WHERE NULLIF(TRIM(order_id::text), '')    IS NULL
    
 ### Whether duplicate records exist.
 
-sales_orders table
-```
-SELECT COUNT(order_id) AS all_orders, COUNT(DISTINCT order_id) AS distinct_orders
-FROM sales_orders;
-```
 <img width="242" height="69" alt="image" src="https://github.com/user-attachments/assets/7a5cfaa4-5c58-4e85-b4f9-8d393c126465" />
 
-inventory table
-
-```
-SELECT
-COUNT(product_id) AS all_products, 
-COUNT(DISTINCT product_id) AS distinct_products
-FROM inventory;
-```
 
 <img width="267" height="68" alt="image" src="https://github.com/user-attachments/assets/91743a41-d283-4f9d-a8f7-df7b4c366949" />
 
-As we can see, the data requires deduplication.
+#### Insights:
+I check revealed duplicate records in both tables:
+1. sales_orders: 260,780 rows vs. 260,000 distinct order_id values, so 780 surplus rows (about 0.30% of the table).
+2. products: 3,741 rows vs. 2,500 distinct product_id values, so 1,241 surplus rows (about 33.2% of the table). Roughly one in three rows is a repeat, which is a substantial data quality issue.
+
+#### Explanations:
+1. product_id is a primary key in the catalog. It should be unique, so every repeated value is an error (e.g. a doubled import or a merge of several sources). Left uncleaned, duplicates in products would multiply rows in every JOIN with sales_orders and inventory, inflating revenue, quantities and all KPIs built on them.
+2. A repeated order_id is not automatically an error. If the table is at order-line level, one order can legitimately contain several products. Before removing anything, it is necessary to check whether the repeated rows are full duplicates (identical in all columns) or different line items / conflicting versions of the same order.
+3. The two cases require different treatment. Full duplicates can be safely removed (keeping one record). Rows sharing a key but differing in values (e.g. different unit_price or launch_date) need a rule for choosing the correct version, such as the most recent record, or manual review.
+4. Why it matters for the analysis. Duplicates inflate totals and counts, distort averages and shares, and break the one-to-many relationship between products and sales_orders.
   
-- Whether the values stored in each column are reasonable (e.g., prices, quantities).
+### Whether the values stored in each column are reasonable (e.g., prices, quantities).
 
 The data includes unrealistic values such as zero prices, outliers, impossible dates and unreadable discount values. These problematic records made up a small share of rows, except in discount_pct.
 
