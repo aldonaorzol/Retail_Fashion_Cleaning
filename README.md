@@ -11,9 +11,18 @@ PostgreSQL, Microsoft Excel,  Copilot, Claude
 
 The source data contained numerous data quality issues, including inconsistent formats, duplicate records, missing values, and invalid entries. Using SQL, I performed data profiling, data cleansing, and data validation tasks as part of the ETL workflow to enhance data integrity and prepare the datasets for reliable business analysis and reporting. The process included standardizing country names, validating numerical fields, identifying potential outliers, converting data types, standardizing formats, and verifying consistency across sales, product, and inventory datasets. Additional data quality checks were conducted to ensure data accuracy, completeness, and compliance with business rules.
 
-### Data Structure
+### Data Structure:
 
 <img width="710" height="195" alt="image" src="https://github.com/user-attachments/assets/e167ee3c-b875-4515-b690-a402148b2ef1" />
+
+#### Variable types:
+__Identifiers:__ order_id, customer_id, product_id;
+
+__Categorical:__ country, status, category, sub_category, warehouse_country;
+
+__Numeric:__ quantity, unit_price, discount_pct, base_price, stock_quantity;
+
+__Temporal:__ order_date, launch_date, last_stock_update;
 
 
 <img width="741" height="550" alt="image" src="https://github.com/user-attachments/assets/7d1a5270-c555-4ee8-8cba-39b0323e22c6" />
@@ -21,13 +30,6 @@ The source data contained numerous data quality issues, including inconsistent f
 <img width="745" height="370" alt="image" src="https://github.com/user-attachments/assets/d3d8487a-d9e8-42c4-99ca-b7278bce2bae" />
 
 <img width="743" height="292" alt="image" src="https://github.com/user-attachments/assets/7ce36456-83c3-4cc6-ad0e-e80841a5e884" />
-
-
-Kontekst biznesowy 
-
-Charakterystyka danych
-
-
 
 Main Data Cleaning Areas
 * Data type casting (dates, numerics).
