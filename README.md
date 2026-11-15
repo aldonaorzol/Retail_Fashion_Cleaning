@@ -14,7 +14,7 @@ The source data contained numerous data quality issues, including inconsistent f
 
 <h2 align="center">Data Quality</h2>
 
-###- Did I import all the records correctly?
+### Did I import all the records correctly?
 ```
 SELECT 'sales_orders' AS table_name,
        COUNT(*)        AS all_records,
