@@ -38,10 +38,10 @@ FROM inventory;
 
 <img width="325" height="119" alt="image" src="https://github.com/user-attachments/assets/eed79eeb-3ce9-4bff-af8d-9a935a5818f2" />
 
-### Insights:
+#### Insights:
 The table above confirms that the import into PostgreSQL was completed successfully. Row counts reconcile with the source files, and no NULL values were found in the key columns.
 
-### Explanations:
+#### Explanations:
 I verified the row counts and checked key columns for NULL values because:
 1. An import can finish “successfully” even though some records were skipped, for example due to incorrect delimiters, special characters in text fields, corrupted lines, or interrupted loads.
 2. Missing rows distort every subsequent analysis (sums, averages, shares), and no one receives any notification about it.
