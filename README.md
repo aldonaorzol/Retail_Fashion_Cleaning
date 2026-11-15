@@ -27,48 +27,6 @@ __Numeric:__ quantity, unit_price, discount_pct, base_price, stock_quantity;
 __Temporal:__ order_date, launch_date, last_stock_update;
 
 
-<img width="741" height="550" alt="image" src="https://github.com/user-attachments/assets/7d1a5270-c555-4ee8-8cba-39b0323e22c6" />
-
-
-#### Cleaning Plan
-1. Validate completeness: row counts vs. source, missing values (NULL, blank strings, placeholders)
-2. Convert data types: dates (order_date), numerics (quantity, unit_price)
-3. Standardize formats: mixed date formats, country names, discount values (10%, 0.1)
-4. Standardize categorical values (status)
-5. Detect and remove duplicates; verify order_id uniqueness
-6. Identify and treat outliers in quantity and unit_price
-7. Validate referential integrity (product_id exists in products)
-
-
-<img width="745" height="370" alt="image" src="https://github.com/user-attachments/assets/d3d8487a-d9e8-42c4-99ca-b7278bce2bae" />
-
-
-#### Cleaning Plan
-1. Validate completeness and key uniqueness (product_id)
-2. Convert data types: base_price to numeric, launch_date to date
-3. Standardize category and sub_category labels (spelling, case, whitespace)
-4. Check price logic: no zero or negative base_price
-5. Validate dates: launch_date within a plausible range
-
-
-<img width="743" height="292" alt="image" src="https://github.com/user-attachments/assets/7ce36456-83c3-4cc6-ad0e-e80841a5e884" />
-
-
-#### Cleaning Plan
-1. Validate completeness and key uniqueness (product_id + warehouse_country)
-2. Convert data types: stock_quantity to integer, last_stock_update to date
-3. Standardize warehouse_country to match the country codes used in sales_orders
-4. Check stock logic: no negative stock_quantity; review extreme values
-5. Validate referential integrity (product_id exists in products)
-
-#### Main Data Cleaning Areas
-* Data type casting (dates, numerics).
-* Standardization of country names and discount formats.
-* Handling of missing values (NULL, empty strings, placeholders).
-* Duplicate order_id detection and key uniqueness checks.
-* Outlier detection in quantity and unit_price.
-* Cross-table consistency validation.
-
 <h2 align="center">Data Quality</h2>
 
 ### Did I import all the records correctly?
@@ -113,13 +71,22 @@ FROM sales_orders;
 
 <img width="602" height="748" alt="image" src="https://github.com/user-attachments/assets/e687994b-af16-45ed-b3c0-0cb441adddf5" />
 
-
 #### Explanations:
 1. discount_pct (12.0% missing). A missing discount is ambiguous: it may mean “no discount was applied” or “the value was not recorded”. These two cases have different consequences for revenue calculations, so the interpretation must be verified (e.g. by comparing unit_price with base_price from products) before choosing a treatment, such as assuming 0% or flagging the rows. Replacing blanks with 0 without evidence could overstate revenue.
 2. order_date (629 missing). The share is small, but the date is essential for time-based analysis (trends, seasonality, year-over-year comparisons). Rows without a date cannot be assigned to a period and would silently drop out of time-based aggregations. They should be flagged and, if the date cannot be recovered, excluded from time-series analysis, while still being counted in totals where appropriate.
 3. Complete key and analytical columns. order_id, product_id and customer_id have no gaps, so JOIN operations and duplicate detection are not compromised by missing keys. quantity and unit_price are also complete, so revenue can be calculated for every row.
 4. Scope of the check. NULLs are counted here after PostgreSQL converted blank fields during import. In addition to the 629 NULLs, the column contains the text placeholder not_a_date in 661 records (0.25% of all rows). Together, this gives 1,290 rows (about 0.49%) with no usable date. The column also contains dates in invalid formats or with non-existent values, such as 2024-13-40. Because order_date is essential for time-based analysis, these issues are addressed during standardization.
   
+<img width="741" height="550" alt="image" src="https://github.com/user-attachments/assets/7d1a5270-c555-4ee8-8cba-39b0323e22c6" />
+
+#### Cleaning Plan
+1. Validate completeness: row counts vs. source, missing values (NULL, blank strings, placeholders)
+2. Convert data types: dates (order_date), numerics (quantity, unit_price)
+3. Standardize formats: mixed date formats, country names, discount values (10%, 0.1)
+4. Standardize categorical values (status)
+5. Detect and remove duplicates; verify order_id uniqueness
+6. Identify and treat outliers in quantity and unit_price
+7. Validate referential integrity (product_id exists in products)
 
 #### Products:
 ```
@@ -147,6 +114,15 @@ All other columns (product_id, category, sub_category, base_price) contain no NU
 1.Complete key and analytical columns. product_id has no gaps, so JOIN operations with sales_orders and inventory are not compromised. category, sub_category and base_price are also complete, so sales can be analyzed by product segment and compared against selling prices without any imputation.
 2. launch_date (91 missing). The missing values are documented, but they do not affect this project: the column is not used in the analysis, so the affected rows are retained and no imputation or removal is required. Should the scope change in the future (e.g. analyzing product age or the effect of new launches on sales), these records would need to be reviewed, as they could not be included in such analysis.
 
+<img width="745" height="370" alt="image" src="https://github.com/user-attachments/assets/d3d8487a-d9e8-42c4-99ca-b7278bce2bae" />
+
+#### Cleaning Plan
+1. Validate completeness and key uniqueness (product_id)
+2. Convert data types: base_price to numeric, launch_date to date
+3. Standardize category and sub_category labels (spelling, case, whitespace)
+4. Check price logic: no zero or negative base_price
+5. Validate dates: launch_date within a plausible range
+   
 #### Inventory:
 
 ```
@@ -170,6 +146,22 @@ All other columns (product_id, warehouse_country, stock_quantity) contain no NUL
 2. last_stock_update is not only missing, but also inconsistent. Besides 6 NULLs, the column contains the placeholder not_a_date, an invalid date and partial dates (year and month only). A NULL-only check therefore understates the scale of the problem: the number of unusable dates is higher than 6.
 3. Impact on the project. last_stock_update will be used in the analysis (e.g. to assess how current the inventory data is), so these records cannot be ignored. Rows with not_a_date, NULL or a non-existent date have no usable update date and will be converted to NULL and flagged. Partial dates (year and month) need an explicit rule: either keep them at month-level precision or set them to the first day of the month, with the decision documented. Dates will be parsed into a proper DATE type and checked against the expected range.
 
+<img width="743" height="292" alt="image" src="https://github.com/user-attachments/assets/7ce36456-83c3-4cc6-ad0e-e80841a5e884" />
+
+#### Cleaning Plan
+1. Validate completeness and key uniqueness (product_id + warehouse_country)
+2. Convert data types: stock_quantity to integer, last_stock_update to date
+3. Standardize warehouse_country to match the country codes used in sales_orders
+4. Check stock logic: no negative stock_quantity; review extreme values
+5. Validate referential integrity (product_id exists in products)
+
+#### Main Data Cleaning Areas
+* Data type casting (dates, numerics).
+* Standardization of country names and discount formats.
+* Handling of missing values (NULL, empty strings, placeholders).
+* Duplicate order_id detection and key uniqueness checks.
+* Outlier detection in quantity and unit_price.
+* Cross-table consistency validation.
 
 ### Does the dataset contain any missing values
 
