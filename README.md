@@ -74,6 +74,7 @@ __Temporal:__ order_date, launch_date, last_stock_update;
 ### Did I import all the records correctly?
 
 #### Sales_orders:
+
 ```
 SELECT 'sales_orders' AS table_name,
        COUNT(*)                             AS all_records,
@@ -98,6 +99,9 @@ discount_pct: 31,322 NULLs (about 12.0% of rows)
 order_date: 629 NULLs (about 0.24% of rows)
 I also noticed not_a_date values in order_date column. 
 
+
+<img width="319" height="68" alt="image" src="https://github.com/user-attachments/assets/756b6f26-d81d-4fa0-affb-77a8b5820ecc" />
+
 ```
 SELECT
     COUNT(*)                                                             AS all_records,
@@ -107,7 +111,7 @@ SELECT
 FROM sales_orders;
 ```
 
-<img width="319" height="68" alt="image" src="https://github.com/user-attachments/assets/756b6f26-d81d-4fa0-affb-77a8b5820ecc" />
+<img width="602" height="748" alt="image" src="https://github.com/user-attachments/assets/e687994b-af16-45ed-b3c0-0cb441adddf5" />
 
 
 #### Explanations:
