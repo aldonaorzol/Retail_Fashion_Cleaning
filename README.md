@@ -27,11 +27,32 @@ __Temporal:__ order_date, launch_date, last_stock_update;
 
 <img width="741" height="550" alt="image" src="https://github.com/user-attachments/assets/7d1a5270-c555-4ee8-8cba-39b0323e22c6" />
 
-
+#### Cleaning Plan
+1. Validate completeness: row counts vs. source, missing values (NULL, blank strings, placeholders)
+2. Convert data types: dates (order_date), numerics (quantity, unit_price)
+3. Standardize formats: mixed date formats, country names, discount values (10%, 0.1)
+4. Standardize categorical values (status)
+5. Detect and remove duplicates; verify order_id uniqueness
+6. Identify and treat outliers in quantity and unit_price
+7. Validate referential integrity (product_id exists in products)
 
 <img width="745" height="370" alt="image" src="https://github.com/user-attachments/assets/d3d8487a-d9e8-42c4-99ca-b7278bce2bae" />
 
+#### Cleaning Plan
+1. Validate completeness and key uniqueness (product_id)
+2. Convert data types: base_price to numeric, launch_date to date
+3. Standardize category and sub_category labels (spelling, case, whitespace)
+4. Check price logic: no zero or negative base_price
+5. Validate dates: launch_date within a plausible range
+
 <img width="743" height="292" alt="image" src="https://github.com/user-attachments/assets/7ce36456-83c3-4cc6-ad0e-e80841a5e884" />
+
+#### Cleaning Plan
+1. Validate completeness and key uniqueness (product_id + warehouse_country)
+2. Convert data types: stock_quantity to integer, last_stock_update to date
+3. Standardize warehouse_country to match the country codes used in sales_orders
+4. Check stock logic: no negative stock_quantity; review extreme values
+5. Validate referential integrity (product_id exists in products)
 
 Main Data Cleaning Areas
 * Data type casting (dates, numerics).
