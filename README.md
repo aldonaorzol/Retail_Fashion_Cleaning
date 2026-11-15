@@ -1,7 +1,7 @@
  <h1 align="center">Retail_Fashion_Cleaning</h1>
 
 ### Data analysis:
-This notebook covers the first phase of the Retail_Fashion project: data cleaning and preparation. The analysis itself continues in Part 2, available at the link below: https://github.com/aldonaorzol/Retail_Fashion_Analysis
+This notebook covers the first phase of the Retail_Fashion project: data cleaning and preparation. The analysis itself continues in the second part, available at the link: https://github.com/aldonaorzol/Retail_Fashion_Analysis
 
 
 ### Tools: 
