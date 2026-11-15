@@ -120,8 +120,11 @@ WHERE NULLIF(TRIM(order_id::text), '')    IS NULL
    
 ### Whether duplicate records exist.
 
+Sales_orders:
+
 <img width="242" height="69" alt="image" src="https://github.com/user-attachments/assets/7a5cfaa4-5c58-4e85-b4f9-8d393c126465" />
 
+Inventory:
 
 <img width="267" height="68" alt="image" src="https://github.com/user-attachments/assets/91743a41-d283-4f9d-a8f7-df7b4c366949" />
 
@@ -129,6 +132,18 @@ WHERE NULLIF(TRIM(order_id::text), '')    IS NULL
 I check revealed duplicate records in both tables:
 1. sales_orders: 260,780 rows vs. 260,000 distinct order_id values, so 780 surplus rows (about 0.30% of the table).
 2. products: 3,741 rows vs. 2,500 distinct product_id values, so 1,241 surplus rows (about 33.2% of the table). Roughly one in three rows is a repeat, which is a substantial data quality issue.
+
+```
+SELECT COUNT(*) AS all_rows,
+       COUNT(DISTINCT (product_id, warehouse_country)) AS distinct_keys,
+       COUNT(DISTINCT (product_id, warehouse_country, stock_quantity, last_stock_update)) AS distinct_full_rows
+FROM inventory;
+```
+
+<img width="964" height="265" alt="image" src="https://github.com/user-attachments/assets/3f0436cf-f540-4945-9270-52392fa700e0" />
+
+
+<img width="349" height="764" alt="image" src="https://github.com/user-attachments/assets/589aad2c-3051-4688-b8f6-faba5aeb337b" />
 
 #### Explanations:
 1. product_id is a primary key in the catalog. It should be unique, so every repeated value is an error (e.g. a doubled import or a merge of several sources). Left uncleaned, duplicates in products would multiply rows in every JOIN with sales_orders and inventory, inflating revenue, quantities and all KPIs built on them.
