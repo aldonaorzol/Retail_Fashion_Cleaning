@@ -73,7 +73,7 @@ __Temporal:__ order_date, launch_date, last_stock_update;
 
 ### Did I import all the records correctly?
 
-#### Sales_orders
+#### Sales_orders:
 ```
 SELECT 'sales_orders' AS table_name,
        COUNT(*)                             AS all_records,
@@ -102,6 +102,35 @@ order_date: 629 NULLs (about 0.24% of rows)
 2. order_date (629 missing). The share is small, but the date is essential for time-based analysis (trends, seasonality, year-over-year comparisons). Rows without a date cannot be assigned to a period and would silently drop out of time-based aggregations. They should be flagged and, if the date cannot be recovered, excluded from time-series analysis, while still being counted in totals where appropriate.
 3. Complete key and analytical columns. order_id, product_id and customer_id have no gaps, so JOIN operations and duplicate detection are not compromised by missing keys. quantity and unit_price are also complete, so revenue can be calculated for every row.
 4. Scope of the check. NULLs are counted here after PostgreSQL converted blank fields during import. Placeholder values stored as text (e.g. N/A, -) and dates in invalid formats would not appear in this result, so they still need to be checked separately during standardization.
+
+#### Products:
+```
+SELECT 'products' AS table_name,
+       COUNT(*)                          AS all_records,
+       COUNT(*) - COUNT(product_id)      AS product_id_nulls,
+       COUNT(*) - COUNT(category)        AS category_nulls,
+       COUNT(*) - COUNT(sub_category)    AS sub_category_nulls,
+       COUNT(*) - COUNT(base_price)      AS base_price_nulls,
+       COUNT(*) - COUNT(launch_date)     AS launch_date_nulls
+FROM products;
+```
+
+<img width="789" height="76" alt="image" src="https://github.com/user-attachments/assets/b4c7c36a-6857-498d-9598-5e31594e55c7" />
+
+#### Insights: 
+The per-column check of products (2,500 records) shows that missing values occur in only one column:
+launch_date: 91 NULLs (about 3.6% of rows)
+All other columns (product_id, category, sub_category, base_price) contain no NULLs.
+
+#### Explanations:
+
+1.Complete key and analytical columns. product_id has no gaps, so JOIN operations with sales_orders and inventory are not compromised. category, sub_category and base_price are also complete, so sales can be analyzed by product segment and compared against selling prices without any imputation.
+2. launch_date (91 missing). The missing values are documented, but they do not affect this project: the column is not used in the analysis, so the affected rows are retained and no imputation or removal is required. Should the scope change in the future (e.g. analyzing product age or the effect of new launches on sales), these records would need to be reviewed, as they could not be included in such analysis.
+3. Scope of the check. The result covers NULLs only. Placeholder values stored as text (e.g. N/A, -), inconsistent category labels, and invalid values in base_price are verified separately in the following steps.
+
+#### Inventory:
+#### Insights:
+#### Explanations:
 
 ### Does the dataset contain any missing values
 
