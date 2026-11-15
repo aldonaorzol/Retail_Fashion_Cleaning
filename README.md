@@ -649,6 +649,8 @@ FROM dedup_id;
 ***I skipped the columns that did not require cleaning.***
 
 <h2 align="center">Preparing tables to POWER BI</h2> 
+Dane są wyczyszczone i gotowe do analizy poniżej próbka jak wyglądają po czyszczeniu.
+
 ## Sales_order
 
 ```
