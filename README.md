@@ -31,7 +31,7 @@ __Temporal:__ order_date, launch_date, last_stock_update;
 
 ### Did I import all the records correctly?
 
-<h3 align="center">Sales_orders:</h3>
+### Sales_orders:
 
 ```
 SELECT 'sales_orders' AS table_name,
@@ -88,7 +88,7 @@ FROM sales_orders;
 6. Identify and treat outliers in quantity and unit_price
 7. Validate referential integrity (product_id exists in products)
 
-#### Products:
+## Products:
 ```
 SELECT 'products' AS table_name,
        COUNT(*)                          AS all_records,
@@ -123,7 +123,7 @@ All other columns (product_id, category, sub_category, base_price) contain no NU
 4. Check price logic: no zero or negative base_price
 5. Validate dates: launch_date within a plausible range
    
-#### Inventory:
+## Inventory:
 
 ```
 SELECT 'inventory' AS table_name,
