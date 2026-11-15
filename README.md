@@ -163,53 +163,19 @@ All other columns (product_id, warehouse_country, stock_quantity) contain no NUL
 * Outlier detection in quantity and unit_price.
 * Cross-table consistency validation.
 
-### Does the dataset contain any missing values
-
-<img width="743" height="325" alt="image" src="https://github.com/user-attachments/assets/d151b7da-e2a6-46b1-b64b-fdc155259604" />
-
-<img width="672" height="715" alt="image" src="https://github.com/user-attachments/assets/42660b9f-2efc-4972-aa31-be393279ec2f" />
-
-#### Insights:
-The query returned 0 rows, even though the source file clearly contained missing values. During import, PostgreSQL converted blank fields to NULL. Because a comparison such as TRIM(NULL) = '' evaluates to UNKNOWN rather than TRUE, rows with NULLs are never returned by the WHERE filter. This is a false negative: the check passed, but the data quality issue remained undetected. So I check NULLs and blank strings.
-```
-SELECT *
-FROM sales_orders
-WHERE NULLIF(TRIM(order_id::text), '')    IS NULL
-   OR NULLIF(TRIM(customer_id::text), '') IS NULL
-   OR NULLIF(TRIM(order_date::text), '')  IS NULL
-   OR NULLIF(TRIM(product_id::text), '')  IS NULL
-   OR NULLIF(TRIM(quantity::text), '')    IS NULL
-   OR NULLIF(TRIM(unit_price::text), '')  IS NULL;
-```
-
-<img width="833" height="446" alt="image" src="https://github.com/user-attachments/assets/bba4e2c4-5674-4448-8e41-05b24b30a05a" />
-
-
-<img width="498" height="442" alt="image" src="https://github.com/user-attachments/assets/d4156cc3-6d90-4beb-b0d9-f4aca959dbba" />
-
-
-<img width="500" height="192" alt="image" src="https://github.com/user-attachments/assets/4a867ca9-c9e2-431c-b907-d5f12177a315" />
-
-
-#### Explanations:
-1. Key columns (order_id, product_id, customer_id) must not contain missing values, as they break JOIN operations and duplicate detection.
-2. Analytical columns (unit_price, quantity, order_date) directly affect calculations and reporting accuracy, since aggregate functions such as SUM and AVG silently ignore NULLs and can bias results.
-3. Validation logic must match how missing data is actually stored. A check that returns zero rows is only reliable if it is capable of detecting the problem.
-   
 ### Whether duplicate records exist.
 
-Sales_orders:
-
-<img width="242" height="69" alt="image" src="https://github.com/user-attachments/assets/7a5cfaa4-5c58-4e85-b4f9-8d393c126465" />
-
-Inventory:
-
-<img width="267" height="68" alt="image" src="https://github.com/user-attachments/assets/91743a41-d283-4f9d-a8f7-df7b4c366949" />
+<img width="601" height="389" alt="image" src="https://github.com/user-attachments/assets/b58700ad-133a-4db1-ad39-1b2d75f8759d" />
 
 #### Insights:
-I check revealed duplicate records in both tables:
-1. sales_orders: 260,780 rows vs. 260,000 distinct order_id values, so 780 surplus rows (about 0.30% of the table).
-2. products: 3,741 rows vs. 2,500 distinct product_id values, so 1,241 surplus rows (about 33.2% of the table). Roughly one in three rows is a repeat, which is a substantial data quality issue.
+I check compared the number of rows with the number of distinct key values in each table:
+- sales_orders: 260,780 rows vs. 260,000 distinct order_id values, so 780 surplus rows (about 0.30% of the table).
+- products: 2,500 rows and 2,500 distinct product_id values, so the key is unique and no duplicates exist.
+- inventory: 3,741 rows vs. 2,500 distinct product_id values.
+
+<img width="782" height="690" alt="image" src="https://github.com/user-attachments/assets/b8233935-e21b-4ec9-8981-84ce80f031a5" />
+
+The results confirm that real duplicate records exist in the sales_orders table. They will be removed in the next step.
 
 ```
 SELECT COUNT(*) AS all_rows,
@@ -223,11 +189,14 @@ FROM inventory;
 
 <img width="349" height="764" alt="image" src="https://github.com/user-attachments/assets/589aad2c-3051-4688-b8f6-faba5aeb337b" />
 
+The results confirm that products does not require a deduplication process, as its key is unique.
+
 #### Explanations:
-1. product_id is a primary key in the catalog. It should be unique, so every repeated value is an error (e.g. a doubled import or a merge of several sources). Left uncleaned, duplicates in products would multiply rows in every JOIN with sales_orders and inventory, inflating revenue, quantities and all KPIs built on them.
-2. A repeated order_id is not automatically an error. If the table is at order-line level, one order can legitimately contain several products. Before removing anything, it is necessary to check whether the repeated rows are full duplicates (identical in all columns) or different line items / conflicting versions of the same order.
-3. The two cases require different treatment. Full duplicates can be safely removed (keeping one record). Rows sharing a key but differing in values (e.g. different unit_price or launch_date) need a rule for choosing the correct version, such as the most recent record, or manual review.
-4. Why it matters for the analysis. Duplicates inflate totals and counts, distort averages and shares, and break the one-to-many relationship between products and sales_orders.
+1. product_id is the primary key in the catalog. It must be unique, so any repeated value would be an error (e.g. a doubled import or a merge of several sources). Duplicates in products would multiply rows in every JOIN with sales_orders and inventory, inflating revenue, quantities and all KPIs built on them. This was not the case here.
+2. A repeated order_id is not automatically an error. If the table is at order-line level, one order can legitimately contain several products. Before removing anything, it was necessary to check whether the repeated rows are full duplicates (identical in all columns) or different line items / conflicting versions of the same order.
+3. The two cases require different treatment. Full duplicates can be safely removed (keeping one record). Rows sharing a key but differing in values need a rule for choosing the correct version, such as the most recent record, or manual review.
+4. In inventory, a repeated product_id is expected. The correct uniqueness check is the composite key (product_id + warehouse_country), which passed.
+5. Why it matters for the analysis. Duplicates inflate totals and counts, distort averages and shares, and break the one-to-many relationship between products and sales_orders.
   
 ### Whether the values stored in each column are reasonable (e.g., prices, quantities).
 
