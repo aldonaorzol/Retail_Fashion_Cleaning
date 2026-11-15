@@ -1,12 +1,16 @@
  <h1 align="center">Retail_Fashion_Cleaning</h1>
 
 ### Data analysis:
-https://github.com/aldonaorzol/Retail_Fashion_Analysis
+This notebook covers the first phase of the Retail_Fashion project: data cleaning and preparation. The analysis itself continues in Part 2, available at the link below: https://github.com/aldonaorzol/Retail_Fashion_Analysis
+
 
 ### Tools: 
 PostgreSQL, Microsoft Excel,  Copilot, Claude
 
 ### Description:
+
+This stage covers the data wrangling and preprocessing of the retail fashion dataset, preparing it for exploratory data analysis (EDA). The workflow includes data quality assessment, handling missing values and duplicates, standardizing data types and formats, detecting and treating outliers, and validating consistency across key fields. The result is a clean, analysis-ready dataset that ensures the reliability of the insights and statistical findings in the following stages of the project.
+
 The source data contained numerous data quality issues, including inconsistent formats, duplicate records, missing values, and invalid entries. Using SQL, I performed data profiling, data cleansing, and data validation tasks as part of the ETL workflow to enhance data integrity and prepare the datasets for reliable business analysis and reporting. The process included standardizing country names, validating numerical fields, identifying potential outliers, converting data types, standardizing formats, and verifying consistency across sales, product, and inventory datasets. Additional data quality checks were conducted to ensure data accuracy, completeness, and compliance with business rules.
 
 ### Splitting values ​​into columns in Excel:
