@@ -75,8 +75,11 @@ WHERE TRIM(product_id) = ''
    OR TRIM(stock_quantity) = ''
    OR TRIM(last_stock_update) = '';
 ```
+
+#### Insights:
 The validation checked for empty strings (= '') and returned 0 rows, even though the source file clearly had missing values. PostgreSQL had converted those blanks to NULL during import.
 
+#### Explanations:
 - Whether duplicate records exist.
 
 sales_orders table
