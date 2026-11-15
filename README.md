@@ -31,7 +31,7 @@ __Temporal:__ order_date, launch_date, last_stock_update;
 
 ### Did I import all the records correctly?
 
-#### Sales_orders:
+<h3 align="center">Sales_orders:</h3>
 
 ```
 SELECT 'sales_orders' AS table_name,
