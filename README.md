@@ -73,17 +73,35 @@ __Temporal:__ order_date, launch_date, last_stock_update;
 
 ### Did I import all the records correctly?
 
-<img width="325" height="119" alt="image" src="https://github.com/user-attachments/assets/eed79eeb-3ce9-4bff-af8d-9a935a5818f2" />
+#### Sales_orders
+```
+SELECT 'sales_orders' AS table_name,
+       COUNT(*)                             AS all_records,
+       COUNT(*) - COUNT(order_id)           AS order_id_nulls,
+       COUNT(*) - COUNT(customer_id)        AS customer_id_nulls,
+       COUNT(*) - COUNT(order_date)         AS order_date_nulls,
+       COUNT(*) - COUNT(country)            AS country_nulls,
+       COUNT(*) - COUNT(product_id)         AS product_id_nulls,
+       COUNT(*) - COUNT(quantity)           AS quantity_nulls,
+       COUNT(*) - COUNT(unit_price)         AS unit_price_nulls,
+       COUNT(*) - COUNT(discount_pct)       AS discount_pct_nulls,
+       COUNT(*) - COUNT(status)             AS status_nulls
+FROM sales_orders;
+```
+
+<img width="1240" height="68" alt="image" src="https://github.com/user-attachments/assets/3ee0d3f1-181c-4e8d-8c01-fca68c29b7f8" />
+
 
 #### Insights:
-The table above confirms that the import into PostgreSQL was completed successfully. Row counts reconcile with the source files, and no NULL values were found in the key columns.
+The per-column check of sales_orders (260,780 records) shows that missing values are concentrated in two columns:
+discount_pct: 31,322 NULLs (about 12.0% of rows)
+order_date: 629 NULLs (about 0.24% of rows)
 
 #### Explanations:
-I verified the row counts and checked key columns for NULL values because:
-1. An import can finish “successfully” even though some records were skipped, for example due to incorrect delimiters, special characters in text fields, corrupted lines, or interrupted loads.
-2. Missing rows distort every subsequent analysis (sums, averages, shares), and no one receives any notification about it.
-3. NULL records will not join correctly in a JOIN, and keys must be complete in order to reliably link tables and detect duplicates.
-4. Even the best analysis on flawed data will produce incorrect conclusions.
+1. discount_pct (12.0% missing). A missing discount is ambiguous: it may mean “no discount was applied” or “the value was not recorded”. These two cases have different consequences for revenue calculations, so the interpretation must be verified (e.g. by comparing unit_price with base_price from products) before choosing a treatment, such as assuming 0% or flagging the rows. Replacing blanks with 0 without evidence could overstate revenue.
+2. order_date (629 missing). The share is small, but the date is essential for time-based analysis (trends, seasonality, year-over-year comparisons). Rows without a date cannot be assigned to a period and would silently drop out of time-based aggregations. They should be flagged and, if the date cannot be recovered, excluded from time-series analysis, while still being counted in totals where appropriate.
+3. Complete key and analytical columns. order_id, product_id and customer_id have no gaps, so JOIN operations and duplicate detection are not compromised by missing keys. quantity and unit_price are also complete, so revenue can be calculated for every row.
+4. Scope of the check. NULLs are counted here after PostgreSQL converted blank fields during import. Placeholder values stored as text (e.g. N/A, -) and dates in invalid formats would not appear in this result, so they still need to be checked separately during standardization.
 
 ### Does the dataset contain any missing values
 
