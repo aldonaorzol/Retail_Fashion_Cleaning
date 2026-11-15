@@ -9,7 +9,8 @@ PostgreSQL, Microsoft Excel,  Copilot, Claude
 
 ### Data Structure
 
-Table ; Number of recors ; Contents
+
+
 
 ### Description:
 
