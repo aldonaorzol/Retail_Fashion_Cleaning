@@ -15,7 +15,7 @@ The source data contained numerous data quality issues, including inconsistent f
 
 <img width="710" height="195" alt="image" src="https://github.com/user-attachments/assets/e167ee3c-b875-4515-b690-a402148b2ef1" />
 
-#### Variable types:
+### Variable types:
 __Identifiers:__ order_id, customer_id, product_id;
 
 __Categorical:__ country, status, category, sub_category, warehouse_country;
@@ -26,6 +26,8 @@ __Temporal:__ order_date, launch_date, last_stock_update;
 
 
 <img width="741" height="550" alt="image" src="https://github.com/user-attachments/assets/7d1a5270-c555-4ee8-8cba-39b0323e22c6" />
+
+
 
 <img width="745" height="370" alt="image" src="https://github.com/user-attachments/assets/d3d8487a-d9e8-42c4-99ca-b7278bce2bae" />
 
@@ -38,12 +40,6 @@ Main Data Cleaning Areas
 * Duplicate order_id detection and key uniqueness checks.
 * Outlier detection in quantity and unit_price.
 * Cross-table consistency validation.
-
-
-Problemy biznesowe coś w tym stylu 
-<img width="564" height="299" alt="image" src="https://github.com/user-attachments/assets/3ba1ea8c-e2fb-46b8-a2e9-d9f1fb87befa" />
-
-Data profiling
 
 <h2 align="center">Data Quality</h2>
 
