@@ -72,30 +72,34 @@ WHERE TRIM(order_id) = ''
    OR TRIM(product_id) = ''
    OR TRIM(quantity) = ''
    OR TRIM(unit_price) = '';
-
+```
+#### Insights:
+The query returned 0 rows, even though the source file clearly contained missing values. During import, PostgreSQL converted blank fields to NULL. Because a comparison such as TRIM(NULL) = '' evaluates to UNKNOWN rather than TRUE, rows with NULLs are never returned by the WHERE filter. This is a false negative: the check passed, but the data quality issue remained undetected. So I check NULLs and blank strings.
+```
 SELECT *
-FROM products
-WHERE TRIM(product_id) = ''
-   OR TRIM(category) = ''
-   OR TRIM(sub_category) = ''
-   OR TRIM(base_price) = ''
-   OR TRIM(launch_date) = '';
-
-SELECT *
-FROM inventory
-WHERE TRIM(product_id) = ''
-   OR TRIM(warehouse_country) = ''
-   OR TRIM(stock_quantity) = ''
-   OR TRIM(last_stock_update) = '';
+FROM sales_orders
+WHERE NULLIF(TRIM(order_id::text), '')    IS NULL
+   OR NULLIF(TRIM(customer_id::text), '') IS NULL
+   OR NULLIF(TRIM(order_date::text), '')  IS NULL
+   OR NULLIF(TRIM(product_id::text), '')  IS NULL
+   OR NULLIF(TRIM(quantity::text), '')    IS NULL
+   OR NULLIF(TRIM(unit_price::text), '')  IS NULL;
 ```
 
-#### Insights:
-The validation checked for empty strings (= '') and returned 0 rows, even though the source file clearly had missing values. PostgreSQL had converted those blanks to NULL during import.
+<img width="833" height="446" alt="image" src="https://github.com/user-attachments/assets/bba4e2c4-5674-4448-8e41-05b24b30a05a" />
+
+
+<img width="500" height="192" alt="image" src="https://github.com/user-attachments/assets/4a867ca9-c9e2-431c-b907-d5f12177a315" />
+
+
+<img width="498" height="442" alt="image" src="https://github.com/user-attachments/assets/d4156cc3-6d90-4beb-b0d9-f4aca959dbba" />
+
 
 #### Explanations:
-1. Key columns (order_id, product_id, customer_id) cannot contain missing values, as they break JOIN operations and duplicate detection.
-2. Analytical columns (unit_price, quantity, order_date) directly affect calculations and reporting accuracy.
-
+1. Key columns (order_id, product_id, customer_id) must not contain missing values, as they break JOIN operations and duplicate detection.
+2. Analytical columns (unit_price, quantity, order_date) directly affect calculations and reporting accuracy, since aggregate functions such as SUM and AVG silently ignore NULLs and can bias results.
+3. Validation logic must match how missing data is actually stored. A check that returns zero rows is only reliable if it is capable of detecting the problem.
+   
 ### Whether duplicate records exist.
 
 sales_orders table
