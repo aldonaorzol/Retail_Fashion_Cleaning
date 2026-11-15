@@ -96,12 +96,26 @@ FROM sales_orders;
 The per-column check of sales_orders (260,780 records) shows that missing values are concentrated in two columns:
 discount_pct: 31,322 NULLs (about 12.0% of rows)
 order_date: 629 NULLs (about 0.24% of rows)
+I also noticed not_a_date values in order_date column. 
+
+```
+SELECT
+    COUNT(*)                                                             AS all_records,
+    COUNT(*) FILTER (WHERE LOWER(TRIM(order_date::text)) = 'not_a_date') AS not_a_date_cnt,
+    ROUND(100.0 * COUNT(*) FILTER (WHERE LOWER(TRIM(order_date::text)) = 'not_a_date')
+          / COUNT(*), 2)                                                 AS not_a_date_pct
+FROM sales_orders;
+```
+
+<img width="319" height="68" alt="image" src="https://github.com/user-attachments/assets/756b6f26-d81d-4fa0-affb-77a8b5820ecc" />
+
 
 #### Explanations:
 1. discount_pct (12.0% missing). A missing discount is ambiguous: it may mean “no discount was applied” or “the value was not recorded”. These two cases have different consequences for revenue calculations, so the interpretation must be verified (e.g. by comparing unit_price with base_price from products) before choosing a treatment, such as assuming 0% or flagging the rows. Replacing blanks with 0 without evidence could overstate revenue.
 2. order_date (629 missing). The share is small, but the date is essential for time-based analysis (trends, seasonality, year-over-year comparisons). Rows without a date cannot be assigned to a period and would silently drop out of time-based aggregations. They should be flagged and, if the date cannot be recovered, excluded from time-series analysis, while still being counted in totals where appropriate.
 3. Complete key and analytical columns. order_id, product_id and customer_id have no gaps, so JOIN operations and duplicate detection are not compromised by missing keys. quantity and unit_price are also complete, so revenue can be calculated for every row.
-4. Scope of the check. NULLs are counted here after PostgreSQL converted blank fields during import. Placeholder values stored as text (e.g. N/A, -) and dates in invalid formats would not appear in this result, so they still need to be checked separately during standardization.
+4. Scope of the check. NULLs are counted here after PostgreSQL converted blank fields during import. In addition to the 629 NULLs, the column contains the text placeholder not_a_date in 661 records (0.25% of all rows). Together, this gives 1,290 rows (about 0.49%) with no usable date. The column also contains dates in invalid formats or with non-existent values, such as 2024-13-40. Because order_date is essential for time-based analysis, these issues are addressed during standardization.
+  
 
 #### Products:
 ```
