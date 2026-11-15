@@ -54,7 +54,7 @@ __Temporal:__ order_date, launch_date, last_stock_update;
 4. Check stock logic: no negative stock_quantity; review extreme values
 5. Validate referential integrity (product_id exists in products)
 
-Main Data Cleaning Areas
+#### Main Data Cleaning Areas
 * Data type casting (dates, numerics).
 * Standardization of country names and discount formats.
 * Handling of missing values (NULL, empty strings, placeholders).
@@ -65,26 +65,6 @@ Main Data Cleaning Areas
 <h2 align="center">Data Quality</h2>
 
 ### Did I import all the records correctly?
-```
-SELECT 'sales_orders' AS table_name,
-       COUNT(*)        AS all_records,
-       COUNT(order_id) AS without_null
-FROM sales_orders
-
-UNION ALL
-
-SELECT 'products',
-       COUNT(*),
-       COUNT(product_id)
-FROM products
-
-UNION ALL
-
-SELECT 'inventory',
-       COUNT(*),
-       COUNT(product_id)
-FROM inventory;
-```
 
 <img width="325" height="119" alt="image" src="https://github.com/user-attachments/assets/eed79eeb-3ce9-4bff-af8d-9a935a5818f2" />
 
@@ -100,16 +80,10 @@ I verified the row counts and checked key columns for NULL values because:
 
 ### Does the dataset contain any missing values
 
-```
-SELECT *
-FROM sales_orders
-WHERE TRIM(order_id) = ''
-   OR TRIM(customer_id) = ''
-   OR TRIM(order_date) = ''
-   OR TRIM(product_id) = ''
-   OR TRIM(quantity) = ''
-   OR TRIM(unit_price) = '';
-```
+<img width="743" height="325" alt="image" src="https://github.com/user-attachments/assets/d151b7da-e2a6-46b1-b64b-fdc155259604" />
+
+<img width="672" height="715" alt="image" src="https://github.com/user-attachments/assets/42660b9f-2efc-4972-aa31-be393279ec2f" />
+
 #### Insights:
 The query returned 0 rows, even though the source file clearly contained missing values. During import, PostgreSQL converted blank fields to NULL. Because a comparison such as TRIM(NULL) = '' evaluates to UNKNOWN rather than TRUE, rows with NULLs are never returned by the WHERE filter. This is a false negative: the check passed, but the data quality issue remained undetected. So I check NULLs and blank strings.
 ```
@@ -126,10 +100,10 @@ WHERE NULLIF(TRIM(order_id::text), '')    IS NULL
 <img width="833" height="446" alt="image" src="https://github.com/user-attachments/assets/bba4e2c4-5674-4448-8e41-05b24b30a05a" />
 
 
-<img width="500" height="192" alt="image" src="https://github.com/user-attachments/assets/4a867ca9-c9e2-431c-b907-d5f12177a315" />
-
-
 <img width="498" height="442" alt="image" src="https://github.com/user-attachments/assets/d4156cc3-6d90-4beb-b0d9-f4aca959dbba" />
+
+
+<img width="500" height="192" alt="image" src="https://github.com/user-attachments/assets/4a867ca9-c9e2-431c-b907-d5f12177a315" />
 
 
 #### Explanations:
