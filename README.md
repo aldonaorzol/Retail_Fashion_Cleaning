@@ -140,13 +140,27 @@ The per-column check of products (2,500 records) shows that missing values occur
 launch_date: 91 NULLs (about 3.6% of rows)
 All other columns (product_id, category, sub_category, base_price) contain no NULLs.
 
+<img width="483" height="707" alt="image" src="https://github.com/user-attachments/assets/45b9f255-f00c-42db-a1db-31d7075402fc" />
+
 #### Explanations:
 
 1.Complete key and analytical columns. product_id has no gaps, so JOIN operations with sales_orders and inventory are not compromised. category, sub_category and base_price are also complete, so sales can be analyzed by product segment and compared against selling prices without any imputation.
 2. launch_date (91 missing). The missing values are documented, but they do not affect this project: the column is not used in the analysis, so the affected rows are retained and no imputation or removal is required. Should the scope change in the future (e.g. analyzing product age or the effect of new launches on sales), these records would need to be reviewed, as they could not be included in such analysis.
 
 #### Inventory:
+
+```
+SELECT 'inventory' AS table_name,
+       COUNT(*)                              AS all_records,
+       COUNT(*) - COUNT(product_id)          AS product_id_nulls,
+       COUNT(*) - COUNT(warehouse_country)   AS warehouse_country_nulls,
+       COUNT(*) - COUNT(stock_quantity)      AS stock_quantity_nulls,
+       COUNT(*) - COUNT(last_stock_update)   AS last_stock_update_nulls
+FROM inventory;
+```
+
 #### Insights:
+
 #### Explanations:
 
 ### Does the dataset contain any missing values
