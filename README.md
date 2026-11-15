@@ -158,10 +158,18 @@ SELECT 'inventory' AS table_name,
        COUNT(*) - COUNT(last_stock_update)   AS last_stock_update_nulls
 FROM inventory;
 ```
+<img width="766" height="70" alt="image" src="https://github.com/user-attachments/assets/990ac658-296d-494b-b000-11de8ed1355a" />
 
 #### Insights:
+The per-column check of inventory (3,741 records) shows that NULLs occur in only one column last_stock_update 6 NULLs (about 0.16% of rows)
+
+All other columns (product_id, warehouse_country, stock_quantity) contain no NULLs. Inspection of the source file additionally revealed that last_stock_update contains invalid entries that a NULL check does not detect: the text placeholder not_a_date, a non-existent date (2024-13-40, month 13 and day 40), and partial dates without a day (e.g. 2023-06, 2023-10, 2024-04, 2024-05, 2024-07, 2024-11). The same pattern was found in products.launch_date.
 
 #### Explanations:
+1. Complete key and analytical columns. product_id and warehouse_country have no gaps, so the composite key (product_id + warehouse_country), already confirmed as unique, is fully populated and JOIN operations with products are not compromised. stock_quantity is also complete, so stock levels are available for every record.
+2. last_stock_update is not only missing, but also inconsistent. Besides 6 NULLs, the column contains the placeholder not_a_date, an invalid date and partial dates (year and month only). A NULL-only check therefore understates the scale of the problem: the number of unusable dates is higher than 6.
+3. Impact on the project. last_stock_update will be used in the analysis (e.g. to assess how current the inventory data is), so these records cannot be ignored. Rows with not_a_date, NULL or a non-existent date have no usable update date and will be converted to NULL and flagged. Partial dates (year and month) need an explicit rule: either keep them at month-level precision or set them to the first day of the month, with the decision documented. Dates will be parsed into a proper DATE type and checked against the expected range.
+
 
 ### Does the dataset contain any missing values
 
