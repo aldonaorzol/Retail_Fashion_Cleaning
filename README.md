@@ -48,7 +48,7 @@ I verified the row counts and checked key columns for NULL values because:
 3. NULL records will not join correctly in a JOIN, and keys must be complete in order to reliably link tables and detect duplicates.
 4. Even the best analysis on flawed data will produce incorrect conclusions.
 
-- Whether there are any missing values.
+### Does the dataset contain any missing values
 
 ```
 SELECT *
