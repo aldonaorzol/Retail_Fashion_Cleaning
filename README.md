@@ -80,7 +80,10 @@ WHERE TRIM(product_id) = ''
 The validation checked for empty strings (= '') and returned 0 rows, even though the source file clearly had missing values. PostgreSQL had converted those blanks to NULL during import.
 
 #### Explanations:
-- Whether duplicate records exist.
+1. Key columns (order_id, product_id, customer_id) cannot contain missing values, as they break JOIN operations and duplicate detection.
+2. Analytical columns (unit_price, quantity, order_date) directly affect calculations and reporting accuracy.
+
+### Whether duplicate records exist.
 
 sales_orders table
 ```
@@ -696,7 +699,4 @@ WHERE rn = 1;
 
 <img width="508" height="416" alt="image" src="https://github.com/user-attachments/assets/fb6b9115-5bd5-44c0-a3e4-86f5e75a286d" />
 
-Data analysis:
-https://github.com/aldonaorzol/Retail_Fashion_Analysis
-
-
+Pomysły na usprawnienia na gromadzenie danych w przyszłości!!!!
