@@ -40,6 +40,13 @@ FROM inventory;
 
 The table above confirms that all records were successfully imported into PostgreSQL. Row counts match the source files, and the key columns contain no NULL values.
 
+
+I verified the row counts and checked key columns for NULL values because:
+1. An import can finish “successfully” even though some records were skipped, for example due to incorrect delimiters, special characters in text fields, corrupted lines, or interrupted loads.
+2. Missing rows distort every subsequent analysis (sums, averages, shares), and no one receives any notification about it.
+3. NULL records will not join correctly in a JOIN, and keys must be complete in order to reliably link tables and detect duplicates.
+4. Even the best analysis on flawed data will produce incorrect conclusions.
+
 - Whether there are any missing values.
 
 ```
