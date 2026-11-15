@@ -7,10 +7,23 @@ This notebook covers the first phase of the Retail_Fashion project: data cleanin
 ### Tools: 
 PostgreSQL, Microsoft Excel,  Copilot, Claude
 
+### Data Structure
+
+Table ; Number of recors ; Contents
+
 ### Description:
 
 The source data contained numerous data quality issues, including inconsistent formats, duplicate records, missing values, and invalid entries. Using SQL, I performed data profiling, data cleansing, and data validation tasks as part of the ETL workflow to enhance data integrity and prepare the datasets for reliable business analysis and reporting. The process included standardizing country names, validating numerical fields, identifying potential outliers, converting data types, standardizing formats, and verifying consistency across sales, product, and inventory datasets. Additional data quality checks were conducted to ensure data accuracy, completeness, and compliance with business rules.
 
+Kontekst biznesowy 
+
+Charakterystyka danych
+
+Problemy biznesowe coś w tym stylu 
+
+<img width="564" height="299" alt="image" src="https://github.com/user-attachments/assets/3ba1ea8c-e2fb-46b8-a2e9-d9f1fb87befa" />
+
+Data profiling
 
 <h2 align="center">Data Quality</h2>
 
