@@ -171,6 +171,17 @@ The results confirm that products does not require a deduplication process, as i
 #### Insights:
 Unstandardized data does not cause errors; it silently distorts results. My queries and charts will run without any problem, and the numbers will look credible, but they will be wrong. When the data is aggregated, France will appear as three separate rows, France, france and FR, each holding only a fraction of the actual sales. The country ranking will therefore depend on how consistently someone typed the name, not on real sales.
 
+<img width="183" height="522" alt="image" src="https://github.com/user-attachments/assets/111310b7-219d-4e53-b58f-cd3c2291e781" />
+<img width="164" height="496" alt="image" src="https://github.com/user-attachments/assets/0093749a-84cb-4bef-b655-a7f2ffea40ae" />
+<img width="180" height="321" alt="image" src="https://github.com/user-attachments/assets/2601630c-d4c4-4e25-a1d6-df601956e6c2" />
+
+
+#### Explanations:
+1. Why standardization is necessary. The country column stores the same country in several forms: different letter case (France, france), full names versus codes (France, FR), non-standard codes (GER instead of DE) and colloquial names (Holland instead of Netherlands). SQL treats each of these as a distinct value, so grouping, filtering and counting operate on the spelling rather than on the actual country.
+
+2. Status values. The values Done, Complete and Completed have the same meaning and should be mapped to a single value. The same applies to Ship and Shipped.
+
+3. Why unambiguous values matter. Unambiguous values are important because I will be analyzing sales by country. The order status determines whether an order was actually fulfilled, generated revenue for the company and should be included in the sales results. Inconsistent status values would cause part of the real sales to be excluded or misclassified, which would distort the results for each country.
 
 
 
@@ -334,10 +345,23 @@ SELECT *,
         WHEN UPPER(TRIM(country)) IN ('PL', 'POL', 'POLAND', 'POLSKA')            THEN 'Poland'
         WHEN UPPER(TRIM(country)) IN ('SE', 'SWEDEN')                             THEN 'Sweden'
         WHEN UPPER(TRIM(country)) IN ('SK', 'SLOVAK', 'SLOVAKIA')                 THEN 'Slovakia'
-    ELSE NULL
+    ELSE 'UNMAPPED'
     END AS clear_country
 FROM orders_clean;
 ```
+
+ weryfikacja czy przebiegło prawidłowo sprawdz i zrób zrzut !!!!!!!
+```
+SELECT country, COUNT(*) AS n_rows
+FROM (
+    SELECT country, CASE ... END AS clear_country
+    FROM orders_clean
+) t
+WHERE clear_country IS NULL OR clear_country = 'UNMAPPED'
+GROUP BY country
+ORDER BY n_rows DESC;
+```
+
 - I built a CASE expression that maps every variant to a single standardized country name.
 - Each value is first normalized with UPPER(TRIM(country)), so the mapping does not depend on capitalization or leading/trailing spaces.
 
