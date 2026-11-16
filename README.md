@@ -92,7 +92,7 @@ SELECT 'products' AS table_name,
 FROM products;
 ```
 
-<img width="789" height="76" alt="image" src="https://github.com/user-attachments/assets/b4c7c36a-6857-498d-9598-5e31594e55c7" />
+<img width="783" height="78" alt="image" src="https://github.com/user-attachments/assets/155236b4-59b0-46ed-8a3c-57089674ffdb" />
 
 #### Insights: 
 The per-column check of products (2,500 records) confirms that the record count is correct. It also shows that missing values occur in only one column:
@@ -117,7 +117,8 @@ SELECT 'inventory' AS table_name,
        COUNT(*) - COUNT(last_stock_update)   AS last_stock_update_nulls
 FROM inventory;
 ```
-<img width="766" height="70" alt="image" src="https://github.com/user-attachments/assets/990ac658-296d-494b-b000-11de8ed1355a" />
+
+<img width="771" height="74" alt="image" src="https://github.com/user-attachments/assets/82c45176-0db4-47fe-827b-116f5d79fa5b" />
 
 #### Insights:
 The per-column check of inventory (3,741 records) confirms that the record count is correct. It also shows that NULLs occur in only one column last_stock_update 6 NULLs (about 0.16% of rows)
