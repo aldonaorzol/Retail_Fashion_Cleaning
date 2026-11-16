@@ -49,9 +49,6 @@ SELECT 'sales_orders' AS table_name,
 FROM sales_orders;
 ```
 
-<img width="1240" height="68" alt="image" src="https://github.com/user-attachments/assets/3ee0d3f1-181c-4e8d-8c01-fca68c29b7f8" />
-
-
 #### Insights:
 The per-column check of sales_orders (260,780 records) confirms that the record count is correct. It also shows that missing values are concentrated in two columns:
 -discount_pct: 31,322 NULLs (about 12.0% of rows)
@@ -70,7 +67,7 @@ SELECT
 FROM sales_orders;
 ```
 
-<img width="602" height="748" alt="image" src="https://github.com/user-attachments/assets/e687994b-af16-45ed-b3c0-0cb441adddf5" />
+<img width="611" height="654" alt="image" src="https://github.com/user-attachments/assets/d2ce39c6-c81a-4903-ba12-fa0ee6e20265" />
 
 #### Explanations:
 1. discount_pct (12.0% missing). A missing discount is ambiguous: it may mean “no discount was applied” or “the value was not recorded”. These two cases have different consequences for revenue calculations, so the interpretation must be verified (e.g. by comparing unit_price with base_price from products) before choosing a treatment, such as assuming 0% or flagging the rows. Replacing blanks with 0 without evidence could overstate revenue.
@@ -94,8 +91,8 @@ FROM products;
 <img width="789" height="76" alt="image" src="https://github.com/user-attachments/assets/b4c7c36a-6857-498d-9598-5e31594e55c7" />
 
 #### Insights: 
-The per-column check of products (2,500 records) shows that missing values occur in only one column:
-launch_date: 91 NULLs (about 3.6% of rows)
+The per-column check of products (2,500 records) confirms that the record count is correct. It also shows that missing values occur in only one column:
+- launch_date: 91 NULLs (about 3.6% of rows)
 All other columns (product_id, category, sub_category, base_price) contain no NULLs.
 
 <img width="483" height="707" alt="image" src="https://github.com/user-attachments/assets/45b9f255-f00c-42db-a1db-31d7075402fc" />
@@ -119,7 +116,7 @@ FROM inventory;
 <img width="766" height="70" alt="image" src="https://github.com/user-attachments/assets/990ac658-296d-494b-b000-11de8ed1355a" />
 
 #### Insights:
-The per-column check of inventory (3,741 records) shows that NULLs occur in only one column last_stock_update 6 NULLs (about 0.16% of rows)
+The per-column check of inventory (3,741 records) confirms that the record count is correct. It also shows that NULLs occur in only one column last_stock_update 6 NULLs (about 0.16% of rows)
 
 All other columns (product_id, warehouse_country, stock_quantity) contain no NULLs. Inspection of the source file additionally revealed that last_stock_update contains invalid entries that a NULL check does not detect: the text placeholder not_a_date, a non-existent date (2024-13-40, month 13 and day 40), and partial dates without a day (e.g. 2023-06, 2023-10, 2024-04, 2024-05, 2024-07, 2024-11). The same pattern was found in products.launch_date.
 
