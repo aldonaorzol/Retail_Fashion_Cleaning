@@ -185,7 +185,12 @@ Unstandardized data does not cause errors; it silently distorts results. My quer
 3. Why unambiguous values matter. Unambiguous values are important because I will be analyzing sales by country. The order status determines whether an order was actually fulfilled, generated revenue for the company and should be included in the sales results. Inconsistent status values would cause part of the real sales to be excluded or misclassified, which would distort the results for each country.
 
 
-- OUTliers !!!!
+
+- OUTLIERS
+
+<img width="147" height="421" alt="image" src="https://github.com/user-attachments/assets/9ae33d34-79e6-4766-8d21-f2e5833f98d9" />
+
+  
 - typy danych 
 The data includes unrealistic values such as zero prices, outliers, impossible dates and unreadable discount values. These problematic records made up a small share of rows, except in discount_pct.
 
@@ -805,5 +810,11 @@ WHERE rn = 1;
 ```
 
 <img width="508" height="416" alt="image" src="https://github.com/user-attachments/assets/fb6b9115-5bd5-44c0-a3e4-86f5e75a286d" />
+
+### Validate referential integrity - product_id exists in the products table
+
+#### Explanations:
+1. I'm looking for orphan records, rows in the child table (sales_orders, stock) whose product_id doesn't exist in the parent table (products). After an INNER JOIN, such rows disappear from the results, and after a LEFT JOIN, they receive empty product attributes (category, base price), so sales per category are underestimated without any warning.
+
 
 Pomysły na usprawnienia na gromadzenie danych w przyszłości!!!!
