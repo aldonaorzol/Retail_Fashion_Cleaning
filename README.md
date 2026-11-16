@@ -55,8 +55,8 @@ FROM sales_orders;
 
 #### Insights:
 The per-column check of sales_orders (260,780 records) confirms that the record count is correct. It also shows that missing values are concentrated in two columns:
--discount_pct: 31,322 NULLs (about 12.0% of rows)
--order_date: 629 NULLs (about 0.24% of rows)
+-discount_pct: __31,322 NULLs__ (about 12.0% of rows)
+-order_date: __629 NULLs__ (about 0.24% of rows)
 
 I also noticed not_a_date values in the order_date column. 
 
@@ -74,10 +74,10 @@ FROM sales_orders;
 <img width="611" height="654" alt="image" src="https://github.com/user-attachments/assets/d2ce39c6-c81a-4903-ba12-fa0ee6e20265" />
 
 #### Explanations:
-1. discount_pct (12.0% missing). A missing discount is ambiguous: it may mean “no discount was applied” or “the value was not recorded”. These two cases have different consequences for revenue calculations, so the interpretation must be verified (e.g. by comparing unit_price with base_price from products) before choosing a treatment, such as assuming 0% or flagging the rows. Replacing blanks with 0 without evidence could overstate revenue.
-2. order_date (629 missing). The share is small, but the date is essential for time-based analysis (trends, seasonality, year-over-year comparisons). Rows without a date cannot be assigned to a period and would silently drop out of time-based aggregations. They should be flagged and, if the date cannot be recovered, excluded from time-series analysis, while still being counted in totals where appropriate.
+1. __discount_pct (12.0% missing)__ missing discount is ambiguous: it may mean “no discount was applied” or “the value was not recorded”. These two cases have different consequences for revenue calculations, so the interpretation must be verified (e.g. by comparing unit_price with base_price from products) before choosing a treatment, such as assuming 0% or flagging the rows. Replacing blanks with 0 without evidence could overstate revenue.
+2. __order_date (629 missing)__ the share is small, but the date is essential for time-based analysis (trends, seasonality, year-over-year comparisons). Rows without a date cannot be assigned to a period and would silently drop out of time-based aggregations. They should be flagged and, if the date cannot be recovered, excluded from time-series analysis, while still being counted in totals where appropriate.
 3. Complete key and analytical columns. order_id, product_id and customer_id have no gaps, so JOIN operations and duplicate detection are not compromised by missing keys. quantity and unit_price are also complete, so revenue can be calculated for every row.
-4. Scope of the check. NULLs are counted here after PostgreSQL converted blank fields during import. In addition to the 629 NULLs, the column contains the text placeholder not_a_date in 661 records (0.25% of all rows). Together, this gives 1,290 rows (about 0.49%) with no usable date. The column also contains dates in invalid formats or with non-existent values, such as 2024-13-40. Because order_date is essential for time-based analysis, these issues are addressed during standardization.
+4. Scope of the check. NULLs are counted here after PostgreSQL converted blank fields during import. In addition to the 629 NULLs, the column contains the text placeholder not_a_date in 661 records (0.25% of all rows). Together, this gives __1,290 rows (about 0.49%)__ with no usable date. The column also contains dates in invalid formats or with non-existent values, such as 2024-13-40. Because order_date is essential for time-based analysis, these issues are addressed during standardization.
   
 
 ## Products:
@@ -96,7 +96,7 @@ FROM products;
 
 #### Insights: 
 The per-column check of products (2,500 records) confirms that the record count is correct. It also shows that missing values occur in only one column:
-- launch_date: 91 NULLs (about 3.6% of rows)
+- launch_date: __91 NULLs (about 3.6% of rows)__
 All other columns (product_id, category, sub_category, base_price) contain no NULLs.
 
 <img width="449" height="735" alt="image" src="https://github.com/user-attachments/assets/23dddca6-e5e8-4032-9257-20fe4403bb02" />
@@ -121,9 +121,9 @@ FROM inventory;
 <img width="771" height="74" alt="image" src="https://github.com/user-attachments/assets/82c45176-0db4-47fe-827b-116f5d79fa5b" />
 
 #### Insights:
-The per-column check of inventory (3,741 records) confirms that the record count is correct. It also shows that NULLs occur in only one column last_stock_update 6 NULLs (about 0.16% of rows)
+The per-column check of inventory (3,741 records) confirms that the record count is correct. It also shows that NULLs occur in only one column last_stock_update __6 NULLs (about 0.16% of rows)__
 
-All other columns (product_id, warehouse_country, stock_quantity) contain no NULLs. Inspection of the source file additionally revealed that last_stock_update contains invalid entries that a NULL check does not detect: the text placeholder not_a_date, a non-existent date (2024-13-40, month 13 and day 40), and partial dates without a day (e.g. 2023-06, 2023-10, 2024-04, 2024-05, 2024-07, 2024-11). The same pattern was found in products.launch_date.
+All other columns (product_id, warehouse_country, stock_quantity) contain no NULLs. Inspection of the source file additionally revealed that last_stock_update contains invalid entries that a NULL check does not detect: the text placeholder not_a_date, a non-existent date __(2024-13-40, month 13 and day 40),__ and partial dates without a day __(e.g. 2023-06, 2023-10, 2024-04, 2024-05, 2024-07, 2024-11).__ The same pattern was found in products.launch_date.
 
 #### Explanations:
 1. Complete key and analytical columns. product_id and warehouse_country have no gaps, so the composite key (product_id + warehouse_country), already confirmed as unique, is fully populated and JOIN operations with products are not compromised. stock_quantity is also complete, so stock levels are available for every record.
@@ -136,9 +136,9 @@ All other columns (product_id, warehouse_country, stock_quantity) contain no NUL
 
 #### Insights:
 I check compared the number of rows with the number of distinct key values in each table:
-- sales_orders: 260,780 rows vs. 260,000 distinct order_id values, so 780 surplus rows (about 0.30% of the table).
+- sales_orders: 260,780 rows vs. 260,000 distinct order_id values, so __780 surplus rows (about 0.30% of the table).__
 - products: 2,500 rows and 2,500 distinct product_id values, so the key is unique and no duplicates exist.
-- inventory: 3,741 rows vs. 2,500 distinct product_id values.
+- inventory: __3,741 rows vs. 2,500__ distinct product_id values.
 
 <img width="782" height="690" alt="image" src="https://github.com/user-attachments/assets/b8233935-e21b-4ec9-8981-84ce80f031a5" />
 
@@ -178,9 +178,9 @@ Unstandardized data does not cause errors; it silently distorts results. My quer
 
 
 #### Explanations:
-1. Why standardization is necessary. The country column stores the same country in several forms: different letter case (France, france), full names versus codes (France, FR), non-standard codes (GER instead of DE) and colloquial names (Holland instead of Netherlands). SQL treats each of these as a distinct value, so grouping, filtering and counting operate on the spelling rather than on the actual country.
+1. Why standardization is necessary. The country column stores the same country in several forms: different letter case __(France, france),__ full names versus codes __(France, FR),__ non-standard codes __(GER instead of DE)__ and colloquial names __(Holland instead of Netherlands).__ SQL treats each of these as a distinct value, so grouping, filtering and counting operate on the spelling rather than on the actual country.
 
-2. Status values. The values Done, Complete and Completed have the same meaning and should be mapped to a single value. The same applies to Ship and Shipped.
+2. Status values. The values __(Done, Complete and Completed)__ have the same meaning and should be mapped to a single value. The same applies to __(Ship and Shipped)__.
 
 3. Why unambiguous values matter. Unambiguous values are important because I will be analyzing sales by country. The order status determines whether an order was actually fulfilled, generated revenue for the company and should be included in the sales results. Inconsistent status values would cause part of the real sales to be excluded or misclassified, which would distort the results for each country.
 
