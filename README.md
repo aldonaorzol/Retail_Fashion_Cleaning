@@ -99,7 +99,7 @@ The per-column check of products (2,500 records) confirms that the record count 
 - launch_date: 91 NULLs (about 3.6% of rows)
 All other columns (product_id, category, sub_category, base_price) contain no NULLs.
 
-<img width="443" height="733" alt="image" src="https://github.com/user-attachments/assets/26198c5a-6794-4e8b-bc0a-9eb30ef14482" />
+<img width="449" height="735" alt="image" src="https://github.com/user-attachments/assets/23dddca6-e5e8-4032-9257-20fe4403bb02" />
 
 #### Explanations:
 
