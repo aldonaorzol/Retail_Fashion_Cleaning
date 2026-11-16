@@ -11,11 +11,13 @@ PostgreSQL, Microsoft Excel,  Copilot, Claude
 
 The source data contained numerous data quality issues, including inconsistent formats, duplicate records, missing values, and invalid entries. Using SQL, I performed data profiling, data cleansing, and data validation tasks as part of the ETL workflow to enhance data integrity and prepare the datasets for reliable business analysis and reporting. The process included standardizing country names, validating numerical fields, identifying potential outliers, converting data types, standardizing formats, and verifying consistency across sales, product, and inventory datasets. Additional data quality checks were conducted to ensure data accuracy, completeness, and compliance with business rules.
 
+### Purpose of the analysis:
+
+
 ### Data Structure:
 
 
 <img width="700" height="205" alt="image" src="https://github.com/user-attachments/assets/31a1bb37-654e-41f6-bdbc-e1d95ef343ed" />
-
 
 
 ### Variable types:
@@ -28,7 +30,7 @@ __Numeric:__ quantity, unit_price, discount_pct, base_price, stock_quantity;
 __Temporal:__ order_date, launch_date, last_stock_update;
 
 
-<h2 align="center">Data Quality</h2>
+<h2 align="center">Data Profiling and Quality</h2>
 
 ### Did I import all the records correctly?
 
@@ -97,7 +99,7 @@ The per-column check of products (2,500 records) confirms that the record count 
 - launch_date: 91 NULLs (about 3.6% of rows)
 All other columns (product_id, category, sub_category, base_price) contain no NULLs.
 
-<img width="483" height="707" alt="image" src="https://github.com/user-attachments/assets/45b9f255-f00c-42db-a1db-31d7075402fc" />
+<img width="443" height="733" alt="image" src="https://github.com/user-attachments/assets/26198c5a-6794-4e8b-bc0a-9eb30ef14482" />
 
 #### Explanations:
 
@@ -163,6 +165,12 @@ The results confirm that products does not require a deduplication process, as i
 5. Why it matters for the analysis. Duplicates inflate totals and counts, distort averages and shares, and break the one-to-many relationship between products and sales_orders.
   
 ### Do the data require standardization?
+
+<img width="816" height="467" alt="image" src="https://github.com/user-attachments/assets/2add5a63-a247-4cc8-9a5e-74ae24544f09" />
+
+#### Insights:
+Unstandardized data does not cause errors; it silently distorts results. My queries and charts will run without any problem, and the numbers will look credible, but they will be wrong. When the data is aggregated, France will appear as three separate rows, France, france and FR, each holding only a fraction of the actual sales. The country ranking will therefore depend on how consistently someone typed the name, not on real sales.
+
 
 
 
