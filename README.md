@@ -185,8 +185,21 @@ Unstandardized data does not cause errors; it silently distorts results. My quer
 3. Why unambiguous values matter. Unambiguous values are important because I will be analyzing sales by country. The order status determines whether an order was actually fulfilled, generated revenue for the company and should be included in the sales results. Inconsistent status values would cause part of the real sales to be excluded or misclassified, which would distort the results for each country.
 
 
-
+- OUTliers !!!!
+- typy danych 
 The data includes unrealistic values such as zero prices, outliers, impossible dates and unreadable discount values. These problematic records made up a small share of rows, except in discount_pct.
+
+-należy uwzględnić jedynie najnoszą wersje weryfikacji stoku uwzględniając że te same produkty mogą tystępować w kilku magazynach. 
+
+### Cleaning Plan:
+
+__Sales_orders__
+
+
+__Products:__
+1. Convert data types: product_id to INT, base_price to decimal, 
+2.  launch_date to date - remove column
+3. Check price logic: no zero or negative base_price
 
 <h2 align="center">TABLE sales_orders</h2>
 
