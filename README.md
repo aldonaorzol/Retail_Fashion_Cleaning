@@ -127,14 +127,6 @@ All other columns (product_id, warehouse_country, stock_quantity) contain no NUL
 2. last_stock_update is not only missing, but also inconsistent. Besides 6 NULLs, the column contains the placeholder not_a_date, an invalid date and partial dates (year and month only). A NULL-only check therefore understates the scale of the problem: the number of unusable dates is higher than 6.
 3. Impact on the project. last_stock_update will be used in the analysis (e.g. to assess how current the inventory data is), so these records cannot be ignored. Rows with not_a_date, NULL or a non-existent date have no usable update date and will be converted to NULL and flagged. Partial dates (year and month) need an explicit rule: either keep them at month-level precision or set them to the first day of the month, with the decision documented. Dates will be parsed into a proper DATE type and checked against the expected range.
 
-#### Main Data Cleaning Areas
-* Data type casting (dates, numerics).
-* Standardization of country names and discount formats.
-* Handling of missing values (NULL, empty strings, placeholders).
-* Duplicate order_id detection and key uniqueness checks.
-* Outlier detection in quantity and unit_price.
-* Cross-table consistency validation.
-
 ### Whether duplicate records exist.
 
 <img width="601" height="389" alt="image" src="https://github.com/user-attachments/assets/b58700ad-133a-4db1-ad39-1b2d75f8759d" />
@@ -170,7 +162,9 @@ The results confirm that products does not require a deduplication process, as i
 4. In inventory, a repeated product_id is expected. The correct uniqueness check is the composite key (product_id + warehouse_country), which passed.
 5. Why it matters for the analysis. Duplicates inflate totals and counts, distort averages and shares, and break the one-to-many relationship between products and sales_orders.
   
-### Whether the values stored in each column are reasonable (e.g., prices, quantities).
+### Do the data require standardization?
+
+
 
 The data includes unrealistic values such as zero prices, outliers, impossible dates and unreadable discount values. These problematic records made up a small share of rows, except in discount_pct.
 
