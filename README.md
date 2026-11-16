@@ -104,7 +104,7 @@ All other columns (product_id, category, sub_category, base_price) contain no NU
 #### Explanations:
 
 1.Complete key and analytical columns. product_id has no gaps, so JOIN operations with sales_orders and inventory are not compromised. category, sub_category and base_price are also complete, so sales can be analyzed by product segment and compared against selling prices without any imputation.
-2. launch_date (91 missing). The missing values are documented, but they do not affect this project: the column is not used in the analysis, so the affected rows are retained and no imputation or removal is required. Should the scope change in the future (e.g. analyzing product age or the effect of new launches on sales), these records would need to be reviewed, as they could not be included in such analysis.
+2. launch_date (91 missing). The missing values are documented, but __they do not affect this project: the column is not used in the analysis,__ so the affected rows are retained and no imputation or removal is required. Should the scope change in the future (e.g. analyzing product age or the effect of new launches on sales), these records would need to be reviewed, as they could not be included in such analysis.
 
 ## Inventory:
 
