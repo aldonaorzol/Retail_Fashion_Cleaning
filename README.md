@@ -49,6 +49,8 @@ SELECT 'sales_orders' AS table_name,
 FROM sales_orders;
 ```
 
+<img width="1204" height="73" alt="image" src="https://github.com/user-attachments/assets/9d0d19d9-4195-4063-a40f-8552aa18003e" />
+
 #### Insights:
 The per-column check of sales_orders (260,780 records) confirms that the record count is correct. It also shows that missing values are concentrated in two columns:
 -discount_pct: 31,322 NULLs (about 12.0% of rows)
