@@ -187,6 +187,7 @@ Unstandardized data does not cause errors; it silently distorts results. My quer
 
 
 - OUTLIERS
+-2608  it consists 1 %
 
 <img width="147" height="421" alt="image" src="https://github.com/user-attachments/assets/9ae33d34-79e6-4766-8d21-f2e5833f98d9" />
 
