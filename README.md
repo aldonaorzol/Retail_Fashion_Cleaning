@@ -191,6 +191,8 @@ Unstandardized data does not cause errors; it silently distorts results. My quer
 
 <img width="147" height="421" alt="image" src="https://github.com/user-attachments/assets/9ae33d34-79e6-4766-8d21-f2e5833f98d9" />
 
+1038 records with 0 values are complaints. They are in the table to show the proper number of orders.
+1... recods with 608 values needs deeper verifying. I decided to assess statistical significance in revenue context 
   
 - typy danych 
 The data includes unrealistic values such as zero prices, outliers, impossible dates and unreadable discount values. These problematic records made up a small share of rows, except in discount_pct.
