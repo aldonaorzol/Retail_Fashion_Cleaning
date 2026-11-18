@@ -186,13 +186,22 @@ Unstandardized data does not cause errors; it silently distorts results. My quer
 
 
 
-- OUTLIERS
--2608  it consists 1 %
+### OUTLIERS
 
 <img width="147" height="421" alt="image" src="https://github.com/user-attachments/assets/9ae33d34-79e6-4766-8d21-f2e5833f98d9" />
 
-1038 records with 0 values are complaints. They are in the table to show the proper number of orders.
-1... recods with 608 values needs deeper verifying. I decided to assess statistical significance in revenue context 
+#### Insights:
+- 1038 records with 0 values are complaints. They are in the table to show the proper number of orders.
+- 1570 recods with 608 values (0,60%) needs deeper verifying. I decided to assess statistical significance in revenue context
+- Odstęp od reszty danych: pozostałe wartości quantity mieszczą się w przedziale 0–13 (średnia 3,19, odchylenie 1,50) !!!!
+
+Test częstości: przy rozkładzie Poissona dopasowanym do reszty prawdopodobieństwo wartości ≥ 608 jest praktycznie zerowe (p < 10⁻³⁰⁰, test dwumianowy p ≈ 0). Oczekiwana liczba takich rekordów to 0, a jest ich 1 570.
+
+Wpływ na wyniki: te rekordy podnoszą średnią quantity z 3,19 do 6,83 i stanowią 53,6% sumy sprzedanych sztuk.
+Rekordy z 608 wyglądają jak losowa próbka danych, a nie wyróżniona grupa:
+Rozkład jest równomierny po produktach (1 152 różne), klientach (1 542 różnych) i latach. Zamówienie 608 sztuk przy typowej cenie ~180 byłoby naprawdę duże i trudno uwierzyć, że zdarza się z taką samą częstością w każdym kraju i roku. To wskazuje na artefakt, na przykład kod błędu, wartość zastępczą (sentinel) przy braku danych lub zepsuty import.
+
+
   
 - typy danych 
 The data includes unrealistic values such as zero prices, outliers, impossible dates and unreadable discount values. These problematic records made up a small share of rows, except in discount_pct.
