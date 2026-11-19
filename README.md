@@ -188,26 +188,15 @@ Unstandardized data does not cause errors; it silently distorts results. My quer
 3. Why unambiguous values matter. Unambiguous values are important because I will be analyzing sales by country. The order status determines whether an order was actually fulfilled, generated revenue for the company and should be included in the sales results. Inconsistent status values would cause part of the real sales to be excluded or misclassified, which would distort the results for each country.
 
 
+I decided to clean my data in PostgreSQL using Views. I made my decision based on:
+- the raw data won't be changed; if any mistakes occur, correction will be possible.
+- the data will always be updated; views are updated automatically
+- 
 
 ### DEDUPLICATION - order_id
 
-***Problem:***
-- The column contains no NULL values (260,780 rows, all non-null).
-- It contains 260,000 unique values in the range 1–260,000, so it is not unique (780 duplicated rows).
-
-```
-SELECT
-    COUNT(*) AS all_rows,
-    COUNT(order_id) AS non_null,
-    COUNT(DISTINCT order_id) AS unique_ids,
-    MIN(order_id::INT) AS min_id,
-    MAX(order_id::INT) AS max_id
-FROM sales_orders;
-```
-
-<img width="426" height="69" alt="image" src="https://github.com/user-attachments/assets/adf1423f-1468-4fd1-a225-5144b83a4f45" />
-
 ***Solutions:***
+
 
 ```
 CREATE VIEW dedup_orders AS
