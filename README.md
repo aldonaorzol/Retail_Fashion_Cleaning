@@ -190,13 +190,16 @@ Unstandardized data does not cause errors; it silently distorts results. My quer
 
 I decided to clean my data in PostgreSQL using Views. I made my decision based on:
 - the raw data won't be changed; if any mistakes occur, correction will be possible.
-- the data will always be updated; views are updated automatically
-- 
+- the data will always be updated; views are updated automatically if the database is updated 
+- a view is a clear record of what I have done with the data. This makes the result easy to reproduce and explain.
 
 ### DEDUPLICATION - order_id
 
-***Solutions:***
+Before:
 
+<img width="783" height="544" alt="image" src="https://github.com/user-attachments/assets/8ab356bc-d8dd-4de4-abba-e2f037f0e1c1" />
+
+***Solutions:***
 
 ```
 CREATE VIEW dedup_orders AS
@@ -211,6 +214,8 @@ SELECT *
 FROM dedup_orders
 WHERE rn = 1;
 ```
+
+After:
 
 - Groups records by order_id using PARTITION BY
 - Assigns a sequential number (rn) to each row within the same group using the ROW_NUMBER() function.
