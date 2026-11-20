@@ -279,7 +279,7 @@ After:
 
 <img width="196" height="536" alt="image" src="https://github.com/user-attachments/assets/6533c9b9-dc94-4e5d-8eda-d485cc059a14" />
 
-<img width="166" height="562" alt="image" src="https://github.com/user-attachments/assets/b8653f7a-1f39-4d19-a023-fef1ed0c9856" />
+
 
 ***What I have done:***
 
