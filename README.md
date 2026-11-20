@@ -212,6 +212,7 @@ After:
 <img width="857" height="171" alt="image" src="https://github.com/user-attachments/assets/9821975f-bd5b-4cf1-9a1c-068d6426ab55" />
 
 ***Why this query is appropriate:***
+
 1. Cannot filter by `ROW_NUMBER()` in the same `SELECT` statement, because window functions are evaluated after the `WHERE` clause. A CTE allows to calculate the number first and then filter by it.
 2. ROW_NUMBER() assigns each row a sequential number within its group. It takes no arguments, because the numbering does not depend on the values of the records.
 3. OVER (...) indicates that this is a window function: it is calculated for each row separately, based on a “window” of related rows, rather than collapsing the rows into one.
@@ -221,7 +222,7 @@ After:
 ### DATE FORMAT STANDARDIZATION - order_date 
 
 ***Problem:***
-The order_date column mixed several text formats: YYYY-MM-DD, YYYY/MM/DD, DD-MM-YYYY, DD.MM.YYYY and YYYY-MM. Some values were also impossible dates, such as 2024-13-40. 
+The order_date column mixed several text formats: YYYY-MM-DD, DD-MM-YYYY, DD.MM.YYYY and YYYY-MM. Some values were also impossible dates, such as 2024-13-40. 
 
 <img width="394" height="170" alt="image" src="https://github.com/user-attachments/assets/b3bb7774-8851-4087-a5b0-585db9cf1445" />
 
@@ -270,6 +271,8 @@ After:
 <img width="196" height="536" alt="image" src="https://github.com/user-attachments/assets/6533c9b9-dc94-4e5d-8eda-d485cc059a14" />
 
 <img width="473" height="142" alt="image" src="https://github.com/user-attachments/assets/c04362c8-5e2e-46da-b3c8-3542b9ad4335" />
+
+***What I have done:***
 
 1. I standardized order_date in a view built on CTEs. Blank values are treated as NULL, and each text value is classified with a strict regular expression (literal dots escaped as \.) that checks the valid ranges for month (01–12) and day (01–31).
 2. Only values that match a pattern are converted to the DATE type with TO_DATE, using the format specific to each pattern. For day-first formats I confirmed the order by checking that the day reaches 31 while the month never exceeds 12.
