@@ -59,7 +59,7 @@ The per-column check of sales_orders (260,780 records) confirms that the record 
 -discount_pct: __31,322 NULLs__ (about 12.0% of rows)
 -order_date: __629 NULLs__ (about 0.24% of rows)
 
-I also noticed non-existent date 2024-13-40 and not_a_date values in the order_date column. 
+I also noticed formats dd.mm.yyyy, yyyy.mm, yyyy.mm.dd, non-existent dates like 2024-13-40, and not_a_date values in the order_date column. 
 
 <img width="319" height="68" alt="image" src="https://github.com/user-attachments/assets/756b6f26-d81d-4fa0-affb-77a8b5820ecc" />
 
