@@ -403,6 +403,20 @@ FROM inventory;
 
 ### - unit_price
 
+<img width="148" height="421" alt="image" src="https://github.com/user-attachments/assets/892790d7-d3fe-4dc5-87b0-2b2155427965" />
+
+<img width="90" height="244" alt="image" src="https://github.com/user-attachments/assets/39ad0368-e012-4f8c-b57d-3b7dfb2a5bb2" />
+
+```
+Select distinct(unit_price), COUNT(*)
+FROM status_cl
+GROUP BY unit_price
+ORDER BY 2 DESC;
+
+SELECT DISTINCT unit_price
+FROM status_cl
+WHERE unit_price !~ '^[0-9]+(\.[0-9]+)?$';
+```
 ### - discount_pct
 
 The data has been cleaned and is ready for analysis. The sample below shows what it looks like after cleaning.
