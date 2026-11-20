@@ -148,7 +148,7 @@ The results confirm that real duplicate records exist in the sales_orders table.
 
 <img width="349" height="764" alt="image" src="https://github.com/user-attachments/assets/589aad2c-3051-4688-b8f6-faba5aeb337b" />
 
-The results confirm that products does not require a deduplication process, as its key is unique.
+The results show that the products table does not require deduplication, as the same product may appear in more than one warehouse.
 
 #### Explanations:
 1. product_id is the primary key in the catalog. It must be unique, so any repeated value would be an error (e.g. a doubled import or a merge of several sources). Duplicates in products would multiply rows in every JOIN with sales_orders and inventory, inflating revenue, quantities and all KPIs built on them. This was not the case here.
