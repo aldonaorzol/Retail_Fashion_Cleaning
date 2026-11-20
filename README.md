@@ -386,8 +386,7 @@ FROM inventory;
 - The original column is kept next to the new clear_country column, so the cleaning stays transparent and auditable, and the raw table is never modified.
 
 
-### Outliers - quantity
-
+### DATA OUTLIERS - quantity
 
 1. The dataset contains 1,038 records with a quantity of 0, representing customer complaints or returned orders. These records were retained because they reflect legitimate business events and contribute to the correct order count.
 
@@ -401,6 +400,10 @@ FROM inventory;
 
 6. Based on these findings, quantity values equal to 608 were classified as anomalous records. They were flagged and excluded from the final analytical dataset to prevent distortion of business metrics and statistical conclusions.
 
+
+### - unit_price
+
+### - discount_pct
 
 The data has been cleaned and is ready for analysis. The sample below shows what it looks like after cleaning.
 
@@ -449,9 +452,8 @@ FROM
 Pomysły na usprawnienia na gromadzenie danych w przyszłości!!!!
 
 
-OUTLIERS
-image
-Insights:
+
+
 1038 records with 0 values are complaints. They are in the table to show the proper number of orders.
 1570 recods with 608 values (0,60%) needs deeper verifying. I decided to assess statistical significance in revenue context
 Odstęp od reszty danych: pozostałe wartości quantity mieszczą się w przedziale 0–13 (średnia 3,19, odchylenie 1,50) !!!!
