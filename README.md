@@ -424,7 +424,9 @@ Data quality validation identified 8 records where the unit_price field containe
 
 <img width="335" height="364" alt="image" src="https://github.com/user-attachments/assets/5fcfd473-d4f8-489c-891d-169a1140df72" />
 
-<img width="249" height="562" alt="image" src="https://github.com/user-attachments/assets/ebb33bb3-a6f3-4e35-98d2-4f8518b8881b" />
+<img width="249" height="562" alt="image" src="https://github.com/user-attachments/assets/ebb33bb3-a6f3-4e35-98d2-4f8518b8881b" /> 
+
+Data quality checks identified 1,616 anomalous records (0.62% of the dataset). Eight records contained date values instead of numeric prices and were classified as data-entry errors. The remaining 1,608 records had a unit price equal to zero. As zero-priced transactions may represent valid business events such as returns, complaints, promotional orders, or missing values, they were investigated separately and retained until their business meaning was verified.
 
 ### - discount_pct
 
