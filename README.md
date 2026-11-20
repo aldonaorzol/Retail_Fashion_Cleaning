@@ -143,13 +143,6 @@ I check compared the number of rows with the number of distinct key values in ea
 
 The results confirm that real duplicate records exist in the sales_orders table. They will be removed in the next step.
 
-```
-SELECT COUNT(*) AS all_rows,
-       COUNT(DISTINCT (product_id, warehouse_country)) AS distinct_keys,
-       COUNT(DISTINCT (product_id, warehouse_country, stock_quantity, last_stock_update)) AS distinct_full_rows
-FROM inventory;
-```
-
 <img width="964" height="265" alt="image" src="https://github.com/user-attachments/assets/3f0436cf-f540-4945-9270-52392fa700e0" />
 
 
