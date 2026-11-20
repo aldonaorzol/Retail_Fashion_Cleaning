@@ -279,8 +279,6 @@ After:
 
 <img width="196" height="536" alt="image" src="https://github.com/user-attachments/assets/6533c9b9-dc94-4e5d-8eda-d485cc059a14" />
 
-<img width="471" height="142" alt="image" src="https://github.com/user-attachments/assets/e02b53bc-00ea-427e-b573-4320fbb9596a" />
-
 ***What I have done:***
 
 1. I standardized order_date in a view built on CTEs. Blank values are treated as NULL, and each text value is classified with a strict regular expression (literal dots escaped as \.) that checks the valid ranges for month (01–12) and day (01–31).
@@ -363,56 +361,11 @@ FROM clear_country;
 
 5. The ELSE NULL clause preserves information about statuses that are not covered by the existing mapping rules. This makes it easier to identify unexpected values, misspellings, or new status variants that should be included in the standardization process, rather than incorrectly assigning them to an existing category.
 
-
-### Outliers - quantity
-
-
-1. The dataset contains 1,038 records with a quantity of 0, representing customer complaints or returned orders. These records were retained because they reflect legitimate business events and contribute to the correct order count.
-
-2. A deeper investigation was conducted on 1,570 records with a quantity value of 608 (0.60% of all observations). In a production environment, such values would be verified with the data owner or data engineering team to confirm their meaning and rule out potential issues in the data pipeline. Since the dataset was synthetically generated, such verification was not possible.
-
-3. All remaining quantity values fall within the range of 0-13 units, with a mean of 3.19 and a standard deviation of 1.50. Assuming that the non-outlier observations represent the true data-generating process, the probability of observing values greater than or equal to 608 is statistically negligible (p < 10⁻³⁰⁰).
-
-4. These records have a substantial impact on the results, increasing the average quantity from 3.19 to 6.83 and accounting for 53.6% of all units sold.
-
-5. Additionally, quantity 608 appears across 1,152 products, 1,542 customers, multiple countries, and multiple years. Such orders are inconsistent with the distribution of the remaining observations and are not supported by available inventory levels.
-
-6. Based on these findings, quantity values equal to 608 were classified as anomalous records. They were flagged and excluded from the final analytical dataset to prevent distortion of business metrics and statistical conclusions.
-
-###  - product_id 
-***Problem:***
-Before using product_id as a key for joining the products, inventory, and sales_orders tables, I needed to confirm that the column was complete and unique.
-
-```
-SELECT
-    COUNT(*) AS all_rows,
-    COUNT(product_id) AS non_null,
-    COUNT(DISTINCT product_id) AS unique_ids,
-    MIN(product_id::INT) AS min_id,
-    MAX(product_id::INT) AS max_id
-FROM products;
-```
-
-<img width="424" height="70" alt="image" src="https://github.com/user-attachments/assets/3c813641-64f2-42ea-b59e-81f14bfbd990" />
-
-***Solutions:***
-- As we can see upper the column has unique values. 
-- I ran a single profiling query that checks the row count, the number of non-NULL values, the number of distinct values, and the minimum and maximum ID
-- The column required no cleaning.
-  
 ### DATA STANDARDIZATION - warehouse_country
 
-Problem:
-The country column in the inventory table described the same warehouse location in many different ways: codes (PL, DE, CZ), full English names (Poland, Germany), local-language names (Polska, Deutschland), alternative names (Czechia) and inconsistent capitalization or stray spaces. One country was therefore split across several categories, which made grouping and reporting stock by country unreliable.
+<img width="429" height="520" alt="image" src="https://github.com/user-attachments/assets/af185b36-f0e3-4d06-81c1-29414620ddc2" />
 
-```
-SELECT DISTINCT warehouse_country, COUNT (warehouse_country)
-FROM inventory
-GROUP BY warehouse_country;
-```
-
-<img width="243" height="443" alt="image" src="https://github.com/user-attachments/assets/94eaf4f1-af9b-4aef-ad1e-943a2dde88a4" />
-
+<img width="198" height="440" alt="image" src="https://github.com/user-attachments/assets/d22f64d5-227f-4d51-aa05-2d5c2d132cd3" />
 
 ***Solutions:***
 
@@ -432,56 +385,24 @@ FROM inventory;
 - Each value is first normalized with UPPER(TRIM(warehouse_country)), so the mapping does not depend on capitalization or leading/trailing spaces. IN (...) lists group all known variants of a country under one label.
 - The original column is kept next to the new clear_country column, so the cleaning stays transparent and auditable, and the raw table is never modified.
 
-### DATE FORMAT STANDARDIZATION - last_stock_update
 
-***Problem:***
-- The column is stored as text, so the database does not enforce a date format.
-- The query returned 8 groups of values that do not match the DD.MM.YYYY pattern (20 rows in total).
-- 6 rows contain NULL values, 2 rows contain 'not_a_date', 6 rows contain 2024-13-40, 6 rows contain incomplete dates without a day
+### Outliers - quantity
 
-```
-SELECT last_stock_update, COUNT(*) AS cnt
-FROM inventory
-WHERE last_stock_update IS NULL
-   OR last_stock_update !~ '^\d{2}\.\d{2}\.\d{4}$'
-GROUP BY last_stock_update
-ORDER BY last_stock_update;
-```
 
-<img width="235" height="245" alt="image" src="https://github.com/user-attachments/assets/16d05bd3-8747-4e53-981c-343708e3c140" />
+1. The dataset contains 1,038 records with a quantity of 0, representing customer complaints or returned orders. These records were retained because they reflect legitimate business events and contribute to the correct order count.
 
-***Solutions:***
+2. A deeper investigation was conducted on 1,570 records with a quantity value of 608 (0.60% of all observations). In a production environment, such values would be verified with the data owner or data engineering team to confirm their meaning and rule out potential issues in the data pipeline. Since the dataset was synthetically generated, such verification was not possible.
 
-```
-CREATE VIEW last_stock_update_cl AS
-SELECT *,
-    CASE
-        --- DD.MM.YYYY
-        WHEN last_stock_update ~ '^(0[1-9]|[12]\d|3[01])\.(0[1-9]|1[0-2])\.\d{4}$'
-            THEN TO_DATE(last_stock_update, 'DD.MM.YYYY')
-        --- YYYY-MM-DD
-        WHEN last_stock_update ~ '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
-            THEN TO_DATE(last_stock_update, 'YYYY-MM-DD')
-        --- YYYY/MM/DD
-        WHEN last_stock_update ~ '^\d{4}/(0[1-9]|1[0-2])/(0[1-9]|[12]\d|3[01])$'
-            THEN TO_DATE(last_stock_update, 'YYYY/MM/DD')
-        --- YYYY-MM (1st day of the month assumed)
-        WHEN last_stock_update ~ '^\d{4}-(0[1-9]|1[0-2])$'
-            THEN TO_DATE(last_stock_update || '-01', 'YYYY-MM-DD')
-        --- incorrect records (e.g. 2024-13-40, not_a_date) -> NULL
-        ELSE NULL
-    END AS last_stock_update_cl
-FROM dedup_id;
-```
+3. All remaining quantity values fall within the range of 0-13 units, with a mean of 3.19 and a standard deviation of 1.50. Assuming that the non-outlier observations represent the true data-generating process, the probability of observing values greater than or equal to 608 is statistically negligible (p < 10⁻³⁰⁰).
 
-- I validated and converted dates in DD.MM.YYYY and YYYY-MM-DD formats to the DATE type.
-- I converted the 3 YYYY-MM records to the first day of the month.
-- I set invalid values (not_a_date, 2024-13-40) to NULL.
-- Missing values were kept as NULL.
+4. These records have a substantial impact on the results, increasing the average quantity from 3.19 to 6.83 and accounting for 53.6% of all units sold.
 
-***I skipped the columns that did not require cleaning.***
- 
-Dane są wyczyszczone i gotowe do analizy poniżej próbka jak wyglądają po czyszczeniu.
+5. Additionally, quantity 608 appears across 1,152 products, 1,542 customers, multiple countries, and multiple years. Such orders are inconsistent with the distribution of the remaining observations and are not supported by available inventory levels.
+
+6. Based on these findings, quantity values equal to 608 were classified as anomalous records. They were flagged and excluded from the final analytical dataset to prevent distortion of business metrics and statistical conclusions.
+
+
+The data has been cleaned and is ready for analysis. The sample below shows what it looks like after cleaning.
 
 ## Sales_order
 
