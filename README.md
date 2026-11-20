@@ -30,9 +30,7 @@ __Numeric:__ quantity, unit_price, discount_pct, base_price, stock_quantity;
 __Temporal:__ order_date, launch_date, last_stock_update;
 
 
-<h2 align="center">Data Profiling and Quality</h2>
-
-### Did I import all the records correctly?
+<h2 align="center">Data Profiling</h2>
 
 ### Sales_orders:
 
@@ -58,7 +56,7 @@ The per-column check of sales_orders (260,780 records) confirms that the record 
 -discount_pct: __31,322 NULLs__ (about 12.0% of rows)
 -order_date: __629 NULLs__ (about 0.24% of rows)
 
-I also noticed not_a_date values in the order_date column. 
+I also noticed non-existent date 2024-13-40 and not_a_date values in the order_date column. 
 
 <img width="319" height="68" alt="image" src="https://github.com/user-attachments/assets/756b6f26-d81d-4fa0-affb-77a8b5820ecc" />
 
