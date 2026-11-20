@@ -319,10 +319,15 @@ FROM date_clean;
 ```
 <img width="173" height="293" alt="image" src="https://github.com/user-attachments/assets/6ae65975-952f-45f7-9969-91509b7430a9" />
 
-- I built a CASE expression that maps every variant to a single standardized country name.
-- Each value is first normalized with UPPER(TRIM(country)), so the mapping does not depend on capitalization or leading/trailing spaces.
+***Explanation of my choices:***
 
+1. Country names were standardized using the CASE statement, which allows multiple variants of the same country name to be mapped to a single, consistent value. This approach is transparent, easy to maintain, and simple to extend with additional mappings when needed, without modifying the source data.
 
+2. The UPPER() function was used to eliminate inconsistencies related to letter casing. As a result, values such as "Germany", "GERMANY", and "germany" are treated as the same country.
+
+3. The TRIM() function removes leading and trailing spaces from text values. This prevents entries such as "Poland " or " Germany" from being interpreted as separate and distinct records.
+
+4. The ELSE 'UNMAPPED' clause makes it possible to identify values that are not covered by the existing mapping rules. This helps detect data entry errors, misspellings, or new country name variations that should be included in the standardization process. It is a safer approach than assigning unknown values to an existing category, as it reduces the risk of incorrect data classification and improves overall data quality.
 
 ### DATA STANDARDIZATION - status
 
