@@ -331,17 +331,9 @@ FROM date_clean;
 
 ### DATA STANDARDIZATION - status
 
-***Problem:***
-The status column contained the same order status written in many different ways: SHIP, shipped, SHIPPED, DONE, done, Done, complete, Completed, COMPLETED, CANCELLED. The inconsistent spelling and capitalization split each status into several categories, which made counting and grouping orders by status unreliable.
+<img width="643" height="628" alt="image" src="https://github.com/user-attachments/assets/c20692a3-a971-4157-af09-757b73a1ede2" />
 
-```
-SELECT DISTINCT status
-FROM sales_orders
-ORDER BY status;
-```
-
-<img width="129" height="310" alt="image" src="https://github.com/user-attachments/assets/0c3397dc-bb84-4dfb-8f25-237ff37852ef" />
-
+<img width="223" height="322" alt="image" src="https://github.com/user-attachments/assets/f2dfa72e-d543-4044-b1f4-802af4924099" />
 
 ***Solutions:***
 
@@ -354,15 +346,28 @@ SELECT *,
 	WHEN UPPER(TRIM(STATUS)) IN ('CANCELLED')                      THEN 'Cancelled'
     ELSE NULL
     END AS status_cl
-FROM discount_cl;
+FROM clear_country;
 ```
 
-- I standardized the column into three consistent statuses (Shipped, Completed, Cancelled) using a CASE expression.
-- Each value is first normalized with UPPER(TRIM(status)), so the mapping does not depend on capitalization or stray spaces.
+<img width="146" height="120" alt="image" src="https://github.com/user-attachments/assets/80682117-55bd-4a49-be65-2e308c620541" />
 
-<h2 align="center">TABLE products</h2>
+***Explanation of my choices:***
 
-### DATA PROFILING - product_id 
+1. The CASE statement was used to standardize the values in the status column. As a result, different variants representing the same order status, such as "SHIP" and "SHIPPED" or "DONE", "COMPLETE", and "COMPLETED", are mapped to a single, consistent category. Standardizing status values improves data quality and ensures more reliable analysis and reporting.
+
+2. The UPPER() function eliminates inconsistencies caused by differences in letter casing, ensuring that values such as "shipped", "Shipped", and "SHIPPED" are treated identically.
+
+3. The TRIM() function removes leading and trailing spaces from text values, preventing entries such as "SHIPPED " or " COMPLETED" from being incorrectly interpreted as separate statuses.
+
+4. Using a VIEW allows the transformation to be performed without modifying the source data. This preserves the original dataset while providing users with clean and standardized values for analysis.
+
+5. The ELSE NULL clause preserves information about statuses that are not covered by the existing mapping rules. This makes it easier to identify unexpected values, misspellings, or new status variants that should be included in the standardization process, rather than incorrectly assigning them to an existing category.
+
+
+### Outliers - quantity
+
+
+###  - product_id 
 ***Problem:***
 Before using product_id as a key for joining the products, inventory, and sales_orders tables, I needed to confirm that the column was complete and unique.
 
