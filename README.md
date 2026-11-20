@@ -407,6 +407,8 @@ FROM inventory;
 
 <img width="90" height="244" alt="image" src="https://github.com/user-attachments/assets/39ad0368-e012-4f8c-b57d-3b7dfb2a5bb2" />
 
+<img width="280" height="74" alt="image" src="https://github.com/user-attachments/assets/cb51d2ca-f364-4232-af47-aa040afb8ae9" />
+
 ```
 Select distinct(unit_price), COUNT(*)
 FROM status_cl
@@ -417,6 +419,13 @@ SELECT DISTINCT unit_price
 FROM status_cl
 WHERE unit_price !~ '^[0-9]+(\.[0-9]+)?$';
 ```
+
+Data quality validation identified 8 records where the unit_price field contained date values (e.g., "28.mar", "26.kwi") instead of numeric prices. Since the field is intended to store monetary values only, these observations were classified as data entry or import errors and excluded from all price-related analyses.
+
+<img width="335" height="364" alt="image" src="https://github.com/user-attachments/assets/5fcfd473-d4f8-489c-891d-169a1140df72" />
+
+<img width="249" height="562" alt="image" src="https://github.com/user-attachments/assets/ebb33bb3-a6f3-4e35-98d2-4f8518b8881b" />
+
 ### - discount_pct
 
 The data has been cleaned and is ready for analysis. The sample below shows what it looks like after cleaning.
