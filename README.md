@@ -225,43 +225,10 @@ The order_date column mixed several text formats: YYYY-MM-DD, YYYY/MM/DD, DD-MM-
 
 <img width="394" height="170" alt="image" src="https://github.com/user-attachments/assets/b3bb7774-8851-4087-a5b0-585db9cf1445" />
 
-After:
+Before:
 
 <img width="789" height="686" alt="image" src="https://github.com/user-attachments/assets/4116ab4b-3ee0-4e4c-bc08-ef18df013866" />
 
-```
-WITH parsed AS (
-    SELECT
-        order_date,
-        CASE
-            -- DD.MM.YYYY lub DD-MM-YYYY
-            WHEN order_date ~ '^(0[1-9]|[12]\d|3[01])[.-](0[1-9]|1[0-2])[.-]\d{4}$'
-                THEN TO_DATE(REPLACE(order_date, '.', '-'), 'DD-MM-YYYY')
-
-            -- YYYY-MM-DD
-            WHEN order_date ~ '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
-                THEN TO_DATE(order_date, 'YYYY-MM-DD')
-
-            -- YYYY/MM/DD
-            WHEN order_date ~ '^\d{4}/(0[1-9]|1[0-2])/(0[1-9]|[12]\d|3[01])$'
-                THEN TO_DATE(order_date, 'YYYY/MM/DD')
-
-            -- YYYY-MM
-            WHEN order_date ~ '^\d{4}-(0[1-9]|1[0-2])$'
-                THEN TO_DATE(order_date || '-01', 'YYYY-MM-DD')
-
-            ELSE NULL
-        END AS order_date_val
-    FROM dedup_orders
-)
-SELECT
-    COUNT(*)                                                        AS all_values,
-    COUNT(*) - COUNT(order_date_val)                                AS null_values,
-    ROUND(100.0 * (COUNT(*) - COUNT(order_date_val)) / COUNT(*), 2) AS percentage_of_all_nulls
-FROM parsed;
-```
-
-<img width="386" height="76" alt="image" src="https://github.com/user-attachments/assets/99a8de21-86fd-4078-8183-fdcf1527c4ed" />
 
 ***Solutions:***
 
@@ -306,6 +273,7 @@ SELECT *,
     END AS order_date_status
 FROM dedup_orders;
 ```
+After:
 
 - I used a CTE to parse dates first and then calculate the share of invalid values on top of the parsed result.
 - I measured what percentage of all records could not be converted to a date. This is 0.73% (NULL values and unrecognized formats combined), so I left them as NULL and excluded them from time-based analysis.
