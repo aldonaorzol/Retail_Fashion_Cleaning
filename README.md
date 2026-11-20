@@ -295,7 +295,7 @@ After:
 
 <img width="619" height="583" alt="image" src="https://github.com/user-attachments/assets/cdbffa8e-cf31-468e-b8a2-8e8a7621857f" />
 
-<img width="167" height="741" alt="image" src="https://github.com/user-attachments/assets/cee88b66-6298-4a1e-a105-17cad8c63c49" />
+<img width="162" height="532" alt="image" src="https://github.com/user-attachments/assets/9a0fd34b-43cd-410b-b493-e0a986a588fe" />
 
 ***Solutions:***
 
