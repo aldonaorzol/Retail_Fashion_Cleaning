@@ -421,10 +421,6 @@ FROM status_cl
 WHERE rn = 1;
 ```
 
-<img width="856" height="415" alt="image" src="https://github.com/user-attachments/assets/bc5b1eca-fd8d-4176-8e47-8a53f396a06f" />
-
-
-
 ## Products
 
 ```
@@ -432,13 +428,9 @@ SELECT
 product_id::INT AS product_id,
 category,
 sub_category,
-base_price::DECIMAL AS base_price,
-date_cl AS launch_date
-FROM date_cl
+base_price::DECIMAL AS base_price
+FROM 
 ```
-
-<img width="500" height="418" alt="image" src="https://github.com/user-attachments/assets/aa854f03-cdd5-4289-b02c-c1c120d80747" />
-
 
 ## Inventory
 
@@ -446,15 +438,9 @@ FROM date_cl
 SELECT
 product_id::INT AS product_id,
 clear_country AS warehouse_country,
-stock_quantity::INT AS stock_quantity,
-last_stock_update_cl AS last_stock_update
-FROM last_stock_update_cl
-WHERE rn = 1;
+stock_quantity::INT AS stock_quantity
+FROM 
 ```
-
-<img width="508" height="416" alt="image" src="https://github.com/user-attachments/assets/fb6b9115-5bd5-44c0-a3e4-86f5e75a286d" />
-
-### Validate referential integrity - product_id exists in the products table
 
 #### Explanations:
 1. I'm looking for orphan records, rows in the child table (sales_orders, stock) whose product_id doesn't exist in the parent table (products). After an INNER JOIN, such rows disappear from the results, and after a LEFT JOIN, they receive empty product attributes (category, base price), so sales per category are underestimated without any warning.
