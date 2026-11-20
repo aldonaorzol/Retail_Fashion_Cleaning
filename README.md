@@ -267,12 +267,15 @@ FROM t;
 ```
 After:
 
+<img width="196" height="536" alt="image" src="https://github.com/user-attachments/assets/6533c9b9-dc94-4e5d-8eda-d485cc059a14" />
+
 <img width="473" height="142" alt="image" src="https://github.com/user-attachments/assets/c04362c8-5e2e-46da-b3c8-3542b9ad4335" />
 
-- I used a CTE to parse dates first and then calculate the share of invalid values on top of the parsed result.
-- I measured what percentage of all records could not be converted to a date. This is 0.73% (NULL values and unrecognized formats combined), so I left them as NULL and excluded them from time-based analysis.
-- Each format was matched with a regular expression with literal dots escaped (\.), so impossible dates such as 2024-13-40 matched no pattern and became NULL.
-- I converted the text values to the DATE type using CASE (the default display format is YYYY-MM-DD).
+1. I standardized order_date in a view built on CTEs. Blank values are treated as NULL, and each text value is classified with a strict regular expression (literal dots escaped as \.) that checks the valid ranges for month (01–12) and day (01–31).
+2. Only values that match a pattern are converted to the DATE type with TO_DATE, using the format specific to each pattern. For day-first formats I confirmed the order by checking that the day reaches 31 while the month never exceeds 12.
+3. Values that match no pattern (e.g., not_a_date, 2024-13-40) become NULL with the status UNRECOGNIZED, and empty values get source_null. Together they account for 0.73% of all records. I kept them in the view, flagged, and excluded them only from time-based analysis.
+4. Records in the yyyy-mm format were assigned the first day of the month and are flagged, so they should be used only for monthly or yearly analysis.
+5. The order_date_status column documents how each date was interpreted, so the cleaning can be audited..
 
 ### DATA STANDARDIZATION - country
 
