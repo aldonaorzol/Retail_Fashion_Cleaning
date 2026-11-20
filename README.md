@@ -298,11 +298,11 @@ After:
 ***Solutions:***
 
 ```
-CREATE VIEW clear_country AS
+CREATE OR REPLACE VIEW clear_country AS
 SELECT *,
     CASE
         WHEN UPPER(TRIM(country)) IN ('AT', 'AUSTRIA')                            THEN 'Austria'
-        WHEN UPPER(TRIM(country)) IN ('CZ', 'CZECH', 'CZECHIA', 'CZECH REPUBLIC') THEN 'The Czech Republic'
+        WHEN UPPER(TRIM(country)) IN ('CZ', 'CZECH', 'CZECHIA', 'CZECH REPUBLIC') THEN 'Czech'
         WHEN UPPER(TRIM(country)) IN ('DE', 'GER', 'GERMANY', 'DEUTSCHLAND')      THEN 'Germany'
         WHEN UPPER(TRIM(country)) IN ('ES', 'SPAIN')                              THEN 'Spain'
         WHEN UPPER(TRIM(country)) IN ('FR', 'FRANCE')                             THEN 'France'
@@ -313,20 +313,9 @@ SELECT *,
         WHEN UPPER(TRIM(country)) IN ('SK', 'SLOVAK', 'SLOVAKIA')                 THEN 'Slovakia'
     ELSE 'UNMAPPED'
     END AS clear_country
-FROM orders_clean;
+FROM date_clean;
 ```
-
-
-```
-SELECT country, COUNT(*) AS n_rows
-FROM (
-    SELECT country, CASE ... END AS clear_country
-    FROM orders_clean
-) t
-WHERE clear_country IS NULL OR clear_country = 'UNMAPPED'
-GROUP BY country
-ORDER BY n_rows DESC;
-```
+<img width="173" height="293" alt="image" src="https://github.com/user-attachments/assets/6ae65975-952f-45f7-9969-91509b7430a9" />
 
 - I built a CASE expression that maps every variant to a single standardized country name.
 - Each value is first normalized with UPPER(TRIM(country)), so the mapping does not depend on capitalization or leading/trailing spaces.
