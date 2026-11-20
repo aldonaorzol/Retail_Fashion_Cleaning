@@ -293,7 +293,9 @@ After:
 
 ### DATA STANDARDIZATION - country
 
-<img width="144" height="491" alt="image" src="https://github.com/user-attachments/assets/aac07b53-5e42-4a18-91dc-f0e25ffd508f" />
+<img width="619" height="583" alt="image" src="https://github.com/user-attachments/assets/cdbffa8e-cf31-468e-b8a2-8e8a7621857f" />
+
+<img width="166" height="233" alt="image" src="https://github.com/user-attachments/assets/d2ce1723-e33c-4066-a1d7-9354b5618511" />
 
 ***Solutions:***
 
