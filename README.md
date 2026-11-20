@@ -285,9 +285,13 @@ After:
 2. Only values that match a pattern are converted to the DATE type with TO_DATE, using the format specific to each pattern. For day-first formats I confirmed the order by checking that the day reaches 31 while the month never exceeds 12.
 3. Values that match no pattern (e.g., not_a_date, 2024-13-40) become NULL with the status UNRECOGNIZED, and empty values get source_null. Together they account for 0.73% of all records. I kept them in the view, flagged, and excluded them only from time-based analysis.
 4. Records in the yyyy-mm format were assigned the first day of the month and are flagged, so they should be used only for monthly or yearly analysis.
-5. The order_date_status column documents how each date was interpreted, so the cleaning can be audited.
+5. The order_date_status column documents how each date was interpreted so the cleaning can be audited.
 
 <img width="1155" height="695" alt="image" src="https://github.com/user-attachments/assets/56620d74-971b-4004-a75e-b50fd6a7aa46" />
+
+### DATE FORMAT STANDARDIZATION - last_stock_update
+
+
 
 ### DATA STANDARDIZATION - country
 
