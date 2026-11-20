@@ -367,6 +367,18 @@ FROM clear_country;
 ### Outliers - quantity
 
 
+1. The dataset contains 1,038 records with a quantity of 0, representing customer complaints or returned orders. These records were retained because they reflect legitimate business events and contribute to the correct order count.
+
+2. A deeper investigation was conducted on 1,570 records with a quantity value of 608 (0.60% of all observations). In a production environment, such values would be verified with the data owner or data engineering team to confirm their meaning and rule out potential issues in the data pipeline. Since the dataset was synthetically generated, such verification was not possible.
+
+3. All remaining quantity values fall within the range of 0-13 units, with a mean of 3.19 and a standard deviation of 1.50. Assuming that the non-outlier observations represent the true data-generating process, the probability of observing values greater than or equal to 608 is statistically negligible (p < 10⁻³⁰⁰).
+
+4. These records have a substantial impact on the results, increasing the average quantity from 3.19 to 6.83 and accounting for 53.6% of all units sold.
+
+5. Additionally, quantity 608 appears across 1,152 products, 1,542 customers, multiple countries, and multiple years. Such orders are inconsistent with the distribution of the remaining observations and are not supported by available inventory levels.
+
+6. Based on these findings, quantity values equal to 608 were classified as anomalous records. They were flagged and excluded from the final analytical dataset to prevent distortion of business metrics and statistical conclusions.
+
 ###  - product_id 
 ***Problem:***
 Before using product_id as a key for joining the products, inventory, and sales_orders tables, I needed to confirm that the column was complete and unique.
