@@ -267,6 +267,12 @@ SELECT t.*,
     END AS order_date_val
 FROM t;
 ```
+
+I decided to use:
+- CTE, because it lets me split the cleaning into clear, named steps (trimming blank values, classifying the format, then converting to DATE) instead of nesting subqueries. The status is calculated once and reused for the conversion, so the logic is easy to read, test, and change in one place.
+- CASE function, because the dates arrive in several different text formats, and each one needs its own rule. CASE checks the formats in a defined order and applies the matching TO_DATE pattern only to values that pass validation, so invalid values never reach the conversion and cannot break the view.
+- Give a flag, because replacing a value with NULL without explanation would hide what happened to the record. The order_date_status flag shows which format each date had and which values were unrecognized or missing, so the cleaning stays transparent, can be audited, and lets me decide separately how to treat each group in the analysis.
+
 After:
 
 <img width="196" height="536" alt="image" src="https://github.com/user-attachments/assets/6533c9b9-dc94-4e5d-8eda-d485cc059a14" />
@@ -279,7 +285,9 @@ After:
 2. Only values that match a pattern are converted to the DATE type with TO_DATE, using the format specific to each pattern. For day-first formats I confirmed the order by checking that the day reaches 31 while the month never exceeds 12.
 3. Values that match no pattern (e.g., not_a_date, 2024-13-40) become NULL with the status UNRECOGNIZED, and empty values get source_null. Together they account for 0.73% of all records. I kept them in the view, flagged, and excluded them only from time-based analysis.
 4. Records in the yyyy-mm format were assigned the first day of the month and are flagged, so they should be used only for monthly or yearly analysis.
-5. The order_date_status column documents how each date was interpreted, so the cleaning can be audited..
+5. The order_date_status column documents how each date was interpreted, so the cleaning can be audited.
+
+<img width="1154" height="295" alt="image" src="https://github.com/user-attachments/assets/6d7a5c3e-834b-4843-9340-eb9b708020b2" />
 
 ### DATA STANDARDIZATION - country
 
