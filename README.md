@@ -428,6 +428,14 @@ Data quality validation identified 8 records where the unit_price field containe
 
 Data quality checks identified 1,616 anomalous records (0.62% of the dataset). Eight records contained date values instead of numeric prices and were classified as data-entry errors. The remaining 1,608 records had a unit price equal to zero. As zero-priced transactions may represent valid business events such as returns, complaints, promotional orders, or missing values, they were investigated separately and retained until their business meaning was verified.
 
+```
+
+```
+
+I could not identify any relationship between unit_price and either status or quantity. As with the previous anomaly, proper verification would require consultation with the data provider, but this was not possible because the dataset was synthetically generated.
+
+Therefore, I decided to treat records with a unit_price of 0 as potential freebies, while records containing date values instead of prices were classified as data quality issues. Both groups were flagged for transparency, but only the records containing date values were considered invalid for price-related analyses.
+
 ### - discount_pct
 
 The data has been cleaned and is ready for analysis. The sample below shows what it looks like after cleaning.
