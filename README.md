@@ -184,6 +184,9 @@ I decided to clean my data in PostgreSQL using Views. I made my decision based o
 
 ### DEDUPLICATION - order_id
 
+***Problem:*** 
+Duplicated orders in order_id column. I veryfying this issue above. 
+
 Before:
 
 <img width="783" height="544" alt="image" src="https://github.com/user-attachments/assets/8ab356bc-d8dd-4de4-abba-e2f037f0e1c1" />
@@ -209,7 +212,7 @@ After:
 <img width="857" height="171" alt="image" src="https://github.com/user-attachments/assets/9821975f-bd5b-4cf1-9a1c-068d6426ab55" />
 
 ***Why this query is appropriate:***
-1. You cannot filter by `ROW_NUMBER()` in the same `SELECT` statement, because window functions are evaluated after the `WHERE` clause. A CTE allows you to calculate the number first and then filter by it.
+1. Cannot filter by `ROW_NUMBER()` in the same `SELECT` statement, because window functions are evaluated after the `WHERE` clause. A CTE allows to calculate the number first and then filter by it.
 2. ROW_NUMBER() assigns each row a sequential number within its group. It takes no arguments, because the numbering does not depend on the values of the records.
 3. OVER (...) indicates that this is a window function: it is calculated for each row separately, based on a “window” of related rows, rather than collapsing the rows into one.
 4. PARTITION BY order_id splits the rows into groups that share the same order_id.
