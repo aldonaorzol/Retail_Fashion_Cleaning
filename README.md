@@ -233,47 +233,41 @@ Before:
 ***Solutions:***
 
 ```
-CREATE VIEW orders_clean AS
-SELECT *,
-    CASE
-        -- DD.MM.YYYY
-        WHEN order_date ~ '^(0[1-9]|[12]\d|3[01])\.(0[1-9]|1[0-2])\.\d{4}$'
-            THEN TO_DATE(order_date, 'DD.MM.YYYY')
-
-        -- DD-MM-YYYY
-        WHEN order_date ~ '^(0[1-9]|[12]\d|3[01])-(0[1-9]|1[0-2])-\d{4}$'
-            THEN TO_DATE(order_date, 'DD-MM-YYYY')
-
-        -- YYYY-MM-DD
-        WHEN order_date ~ '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
-            THEN TO_DATE(order_date, 'YYYY-MM-DD')
-
-        -- YYYY/MM/DD 
-        WHEN order_date ~ '^\d{4}/(0[1-9]|1[0-2])/(0[1-9]|[12]\d|3[01])$'
-            THEN TO_DATE(order_date, 'YYYY/MM/DD')
-
-        -- YYYY-MM (I set the 1st day of the month)
-        WHEN order_date ~ '^\d{4}-(0[1-9]|1[0-2])$'
-            THEN TO_DATE(order_date || '-01', 'YYYY-MM-DD')
-
-        -- incorrect records (e.g. 2024-13-40) -> NULL
-        ELSE NULL
-    END AS order_date_val,
-
-    CASE
-        -- a genuine absence in the source (distinguishing it from unrecognized values)
-        WHEN order_date IS NULL THEN 'source_null'
-        WHEN order_date ~ '^(0[1-9]|[12]\d|3[01])\.(0[1-9]|1[0-2])\.\d{4}$' THEN 'dd.mm.yyyy'
-        WHEN order_date ~ '^(0[1-9]|[12]\d|3[01])-(0[1-9]|1[0-2])-\d{4}$'   THEN 'dd-mm-yyyy'
-        WHEN order_date ~ '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'   THEN 'yyyy-mm-dd'
-        WHEN order_date ~ '^\d{4}/(0[1-9]|1[0-2])/(0[1-9]|[12]\d|3[01])$'   THEN 'yyyy/mm/dd'
-        WHEN order_date ~ '^\d{4}-(0[1-9]|1[0-2])$'                         THEN 'yyyy-mm'
-        -- does not match any pattern (e.g., 2024-13-40, not_a_date)
-        ELSE 'UNRECOGNIZED'
-    END AS order_date_status
-FROM dedup_orders;
+CREATE OR REPLACE VIEW date_clean AS
+WITH s AS (
+    SELECT d.*, NULLIF(TRIM(d.order_date), '') AS od
+    FROM dedup_orders d
+),
+t AS (
+    SELECT s.*,
+        CASE
+            WHEN od IS NULL THEN 'source_null'
+            WHEN od ~ '^(0[1-9]|[12]\d|3[01])\.(0[1-9]|1[0-2])\.\d{4}$' THEN 'dd.mm.yyyy'
+            WHEN od ~ '^(0[1-9]|[12]\d|3[01])-(0[1-9]|1[0-2])-\d{4}$'   THEN 'dd-mm-yyyy'
+            WHEN od ~ '^(0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/\d{4}$'   THEN 'dd/mm/yyyy'
+            WHEN od ~ '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'   THEN 'yyyy-mm-dd'
+            WHEN od ~ '^\d{4}/(0[1-9]|1[0-2])/(0[1-9]|[12]\d|3[01])$'   THEN 'yyyy/mm/dd'
+            WHEN od ~ '^\d{4}\.(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])$' THEN 'yyyy.mm.dd'
+            WHEN od ~ '^\d{4}-(0[1-9]|1[0-2])$'                         THEN 'yyyy-mm'
+            ELSE 'UNRECOGNIZED'
+        END AS order_date_status
+    FROM s
+)
+SELECT t.*,
+    CASE order_date_status
+        WHEN 'dd.mm.yyyy' THEN TO_DATE(od, 'DD.MM.YYYY')
+        WHEN 'dd-mm-yyyy' THEN TO_DATE(od, 'DD-MM-YYYY')
+        WHEN 'dd/mm/yyyy' THEN TO_DATE(od, 'DD/MM/YYYY')
+        WHEN 'yyyy-mm-dd' THEN TO_DATE(od, 'YYYY-MM-DD')
+        WHEN 'yyyy/mm/dd' THEN TO_DATE(od, 'YYYY/MM/DD')
+        WHEN 'yyyy.mm.dd' THEN TO_DATE(od, 'YYYY.MM.DD')
+        WHEN 'yyyy-mm'    THEN TO_DATE(od || '-01', 'YYYY-MM-DD')
+    END AS order_date_val
+FROM t;
 ```
 After:
+
+<img width="473" height="142" alt="image" src="https://github.com/user-attachments/assets/c04362c8-5e2e-46da-b3c8-3542b9ad4335" />
 
 - I used a CTE to parse dates first and then calculate the share of invalid values on top of the parsed result.
 - I measured what percentage of all records could not be converted to a date. This is 0.73% (NULL values and unrecognized formats combined), so I left them as NULL and excluded them from time-based analysis.
