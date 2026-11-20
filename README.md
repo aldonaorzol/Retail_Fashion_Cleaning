@@ -293,15 +293,6 @@ After:
 
 ### DATA STANDARDIZATION - country
 
-***Problem:***
-The country column in the orders data contained the same country written in many different ways: codes (PL, DE), full names (Poland, Germany), local-language names (Polska, Deutschland), alternative names (Holland, Czechia) and inconsistent capitalization or stray spaces. This made grouping and reporting by country unreliable, since one country was split across several categories.
-
-```
-SELECT DISTINCT country
-FROM sales_orders
-ORDER BY country;
-```
-
 <img width="144" height="491" alt="image" src="https://github.com/user-attachments/assets/aac07b53-5e42-4a18-91dc-f0e25ffd508f" />
 
 ***Solutions:***
@@ -325,7 +316,7 @@ SELECT *,
 FROM orders_clean;
 ```
 
- weryfikacja czy przebiegło prawidłowo sprawdz i zrób zrzut !!!!!!!
+
 ```
 SELECT country, COUNT(*) AS n_rows
 FROM (
