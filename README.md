@@ -287,7 +287,7 @@ After:
 4. Records in the yyyy-mm format were assigned the first day of the month and are flagged, so they should be used only for monthly or yearly analysis.
 5. The order_date_status column documents how each date was interpreted, so the cleaning can be audited.
 
-<img width="1154" height="295" alt="image" src="https://github.com/user-attachments/assets/6d7a5c3e-834b-4843-9340-eb9b708020b2" />
+<img width="1155" height="695" alt="image" src="https://github.com/user-attachments/assets/56620d74-971b-4004-a75e-b50fd6a7aa46" />
 
 ### DATA STANDARDIZATION - country
 
