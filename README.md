@@ -219,24 +219,12 @@ After:
 
 <img width="857" height="171" alt="image" src="https://github.com/user-attachments/assets/9821975f-bd5b-4cf1-9a1c-068d6426ab55" />
 
-
-
-***Justification***
-
-Purpose: order_id is an order identifier, so it should appear in the data exactly once. The query keeps one row per order_id and removes repeats that would inflate the number of orders, the total quantity, and revenue.
-
 ***Why this query is appropriate:***
-
-I analyzed the 780 duplicated order_id values and found that all the duplicates are identical. The copies do not differ in content, so it does not matter which row is kept, and the ORDER BY order_id in ROW_NUMBER() has no effect on the result.
-The outcome is predictable. After deduplication, the number of rows equals the number of unique order_id values: 260,780 − 780 = 260,000.
-The source data stays untouched. Using a view instead of DELETE preserves the sales_orders table in its original form, and the deduplication also applies automatically to any new data.
-
-I used a window function:
-
-ROW_NUMBER() assigns each row a sequential number within its group. It takes no arguments, because the numbering does not depend on the values of the records.
-OVER (...) indicates that this is a window function: it is calculated for each row separately, based on a “window” of related rows, rather than collapsing the rows into one.
-PARTITION BY order_id splits the rows into groups that share the same order_id.
-ORDER BY ... sets the order of rows within a group. The row that comes first in that order gets number 1.
+1. You cannot filter by `ROW_NUMBER()` in the same `SELECT` statement, because window functions are evaluated after the `WHERE` clause. A CTE allows you to calculate the number first and then filter by it.
+2. ROW_NUMBER() assigns each row a sequential number within its group. It takes no arguments, because the numbering does not depend on the values of the records.
+3. OVER (...) indicates that this is a window function: it is calculated for each row separately, based on a “window” of related rows, rather than collapsing the rows into one.
+4. PARTITION BY order_id splits the rows into groups that share the same order_id.
+5. ORDER BY ... sets the order of rows within a group. The row that comes first in that order gets number 1.
 
 ### DATE FORMAT STANDARDIZATION - order_date 
 
