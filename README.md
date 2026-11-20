@@ -223,6 +223,12 @@ After:
 ***Problem:***
 The order_date column mixed several text formats: YYYY-MM-DD, YYYY/MM/DD, DD-MM-YYYY, DD.MM.YYYY and YYYY-MM. Some values were also impossible dates, such as 2024-13-40. 
 
+<img width="394" height="170" alt="image" src="https://github.com/user-attachments/assets/b3bb7774-8851-4087-a5b0-585db9cf1445" />
+
+After:
+
+<img width="789" height="686" alt="image" src="https://github.com/user-attachments/assets/4116ab4b-3ee0-4e4c-bc08-ef18df013866" />
+
 ```
 WITH parsed AS (
     SELECT
