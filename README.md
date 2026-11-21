@@ -457,6 +457,37 @@ FROM status_cl
 ### - discount_pct
 
 ```
+
+CREATE VIEW discount_cl AS
+SELECT
+    *,
+    CASE
+        WHEN discount_pct ~ '(sty|lut|mar|kwi|maj|cze|lip|sie|wrz|paź|lis|gru)'
+            THEN NULL
+
+        WHEN discount_pct LIKE '%\%%'
+            THEN REPLACE(discount_pct, '%', '')::NUMERIC
+
+        ELSE discount_pct::NUMERIC
+    END AS discount_pct_clean,
+
+    CASE
+        WHEN discount_pct ~ '(sty|lut|mar|kwi|maj|cze|lip|sie|wrz|paź|lis|gru)'
+            THEN 'INVALID_DATE'
+
+        WHEN discount_pct LIKE '%\%%'
+            THEN 'PERCENT_CONVERTED'
+
+        ELSE 'OK'
+    END AS discount_pct_flag
+
+FROM unit_price_cl;
+```
+
+<img width="280" height="534" alt="image" src="https://github.com/user-attachments/assets/94be3411-be5c-4673-a499-43ef04916368" />
+
+
+```
 SELECT
     COUNT(*) AS total_records,
     COUNT(*) FILTER (
