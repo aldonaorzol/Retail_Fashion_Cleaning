@@ -17,7 +17,6 @@ The goal of Retail_Fashion_Cleaning is to prepare the data for analysis by recov
 
 ### Data Structure:
 
-
 <img width="700" height="205" alt="image" src="https://github.com/user-attachments/assets/31a1bb37-654e-41f6-bdbc-e1d95ef343ed" />
 
 
