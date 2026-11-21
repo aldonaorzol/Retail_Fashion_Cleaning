@@ -456,6 +456,20 @@ FROM status_cl
 
 ### - discount_pct
 
+<img width="862" height="721" alt="image" src="https://github.com/user-attachments/assets/166ba157-e352-4614-b5da-a0f8b01cc747" />
+
+The discount_pct column was stored as text and contained multiple data quality issues. Data profiling revealed three types of values:
+- numeric discounts stored correctly (e.g. 0.0, 13.84),
+- percentage values stored as text with the % symbol (e.g. 10%),
+- invalid values resembling dates with Polish month abbreviations (e.g. 12.lip, 15.mar, 11.lut).
+
+To improve data quality, a dedicated cleaning view (discount_cl) was created. Values containing month abbreviations were considered invalid because they could not represent a discount percentage. These records were converted to NULL and flagged as INVALID_DATE to preserve information about the data quality issue.
+
+Percentage values stored as text were standardized by removing the % symbol and converting the result to a numeric data type. These records were flagged as PERCENT_CONVERTED.
+
+Valid numeric values were retained without modification and flagged as OK.
+
+This approach allowed the original data to be preserved while creating a clean version of the column.
 ```
 
 CREATE VIEW discount_cl AS
