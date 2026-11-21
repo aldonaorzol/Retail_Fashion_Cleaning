@@ -431,6 +431,7 @@ Data quality checks identified 1,616 anomalous records (0.62% of the dataset). E
 I could not identify any relationship between unit_price and either status or quantity. As with the previous anomaly, proper verification would require consultation with the data provider, but this was not possible because the dataset was synthetically generated.
 
 Therefore, I decided to treat records with a unit_price of 0 as potential freebies, while records containing date values instead of prices were classified as data quality issues. Both groups were flagged for transparency, but only the records containing date values were considered invalid for price-related analyses.
+
 ***Solutions:***
 
 ```
@@ -470,8 +471,10 @@ Percentage values stored as text were standardized by removing the % symbol and 
 Valid numeric values were retained without modification and flagged as OK.
 
 This approach allowed the original data to be preserved while creating a clean version of the column.
-```
 
+***Solutions:***
+
+```
 CREATE VIEW discount_cl AS
 SELECT
     *,
@@ -517,6 +520,7 @@ FROM unit_price_cl;
 
 <img width="320" height="72" alt="image" src="https://github.com/user-attachments/assets/7c2782ce-e11b-48c0-846b-68d7f05fc44f" />
 
+***Final decision:***
 Discount percentage (discount_pct) was excluded from the final analysis. Data quality assessment revealed a high proportion of missing and invalid values, including date-like strings stored in a discount field. Although several cleaning rules were applied, the remaining data quality was insufficient to support reliable statistical conclusions. Only 45.10 % were expressed numerically. 
 
 ***The data has been cleaned and is ready for analysis. The sample below shows what it looks like after cleaning.***
@@ -532,7 +536,6 @@ clear_country AS country,
 product_id::INT AS product_id,
 quantity_cl::INT AS quantity,
 unit_price_cl::DECIMAL AS unit_price,
-discount_clean::DECIMAL AS discount,
 status_cl AS status
 FROM status_cl
 WHERE rn = 1;
