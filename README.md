@@ -33,7 +33,7 @@ __Temporal:__ order_date, launch_date, last_stock_update;
 
 <h2 align="center">Data Profiling</h2>
 
-### Import verification
+### Import verification:
 
 ### Sales_orders:
 
@@ -525,67 +525,9 @@ Discount percentage (discount_pct) was excluded from the final analysis. Data qu
 
 ***The data has been cleaned and is ready for analysis. The sample below shows what it looks like after cleaning.***
 
-## Sales_order
 
-```
-SELECT 
-order_id::INT AS order_id,
-order_date_val AS order_date,
-customer_id::INT AS customer_id,
-clear_country AS country,
-product_id::INT AS product_id,
-quantity_cl::INT AS quantity,
-unit_price_cl::DECIMAL AS unit_price,
-status_cl AS status
-FROM status_cl
-WHERE rn = 1;
-```
+### Recommendations for future data collection
 
-## Products
-
-```
-SELECT 
-product_id::INT AS product_id,
-category,
-sub_category,
-base_price::DECIMAL AS base_price
-FROM 
-```
-
-## Inventory
-
-```
-SELECT
-product_id::INT AS product_id,
-clear_country AS warehouse_country,
-stock_quantity::INT AS stock_quantity
-FROM 
-```
-
-#### Explanations:
-1. I'm looking for orphan records, rows in the child table (sales_orders, stock) whose product_id doesn't exist in the parent table (products). After an INNER JOIN, such rows disappear from the results, and after a LEFT JOIN, they receive empty product attributes (category, base price), so sales per category are underestimated without any warning.
+<img width="720" height="649" alt="image" src="https://github.com/user-attachments/assets/e59ddac8-bf46-4063-ab6f-fe489579ad38" />
 
 
-Pomysły na usprawnienia na gromadzenie danych w przyszłości!!!!
-
-
-
-
-1038 records with 0 values are complaints. They are in the table to show the proper number of orders.
-1570 recods with 608 values (0,60%) needs deeper verifying. I decided to assess statistical significance in revenue context
-Odstęp od reszty danych: pozostałe wartości quantity mieszczą się w przedziale 0–13 (średnia 3,19, odchylenie 1,50) !!!!
-Test częstości: przy rozkładzie Poissona dopasowanym do reszty prawdopodobieństwo wartości ≥ 608 jest praktycznie zerowe (p < 10⁻³⁰⁰, test dwumianowy p ≈ 0). Oczekiwana liczba takich rekordów to 0, a jest ich 1 570.
-
-Wpływ na wyniki: te rekordy podnoszą średnią quantity z 3,19 do 6,83 i stanowią 53,6% sumy sprzedanych sztuk. Rekordy z 608 wyglądają jak losowa próbka danych, a nie wyróżniona grupa: Rozkład jest równomierny po produktach (1 152 różne), klientach (1 542 różnych) i latach. Zamówienie 608 sztuk przy typowej cenie ~180 byłoby naprawdę duże i trudno uwierzyć, że zdarza się z taką samą częstością w każdym kraju i roku. To wskazuje na artefakt, na przykład kod błędu, wartość zastępczą (sentinel) przy braku danych lub zepsuty import.
-
-typy danych The data includes unrealistic values such as zero prices, outliers, impossible dates and unreadable discount values. These problematic records made up a small share of rows, except in discount_pct.
--należy uwzględnić jedynie najnoszą wersje weryfikacji stoku uwzględniając że te same produkty mogą tystępować w kilku magazynach.
-
-Cleaning Plan:
-Sales_orders
-
-Products:
-
-Convert data types: product_id to INT, base_price to decimal,
-launch_date to date - remove column
-Check price logic: no zero or negative base_price
