@@ -409,15 +409,16 @@ quantity = 608 (1,570 records, 0.60% of rows)
 5. In a production environment I would confirm their meaning with the data owner. This was not possible because the dataset is synthetic.
 6. They are flagged (is_quantity_anomaly) and excluded from the final analytical dataset to prevent distortion of business metrics.
 
+***Solutions:***
 ```
-CREATE OR REPLACE VIEW quantity_cl AS
+CREATE OR REPLACE VIEW quantity_fl AS
 SELECT *,
        (quantity::int = 0)   AS is_zero_quantity,
        (quantity::int = 608) AS is_quantity_anomaly
 FROM status_cl;
 ```
-Both groups are handled consistently: flagged, documented, and never deleted from the source.
 
+Both groups are handled consistently: flagged, documented, and never deleted from the source.
 
 ### - unit_price
 
