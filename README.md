@@ -388,17 +388,32 @@ FROM inventory;
 
 ### DATA OUTLIERS - quantity
 
-1. The dataset contains 1,038 records with a quantity of 0, representing customer complaints or returned orders. These records were retained because they reflect legitimate business events and contribute to the correct order count.
+Apart from two groups of values (0 and 608), quantity ranges from 1 to 13 units. Excluding 608, the mean is 3.19 and the standard deviation is 1.50. I examined both groups in the same way, using the order status, the price and the distribution across products, customers, countries and years.
 
-2. A deeper investigation was conducted on 1,570 records with a quantity value of 608 (0.60% of all observations). In a production environment, such values would be verified with the data owner or data engineering team to confirm their meaning and rule out potential issues in the data pipeline. Since the dataset was synthetically generated, such verification was not possible.
+quantity = 0 (1,038 records, about 0.40% of rows)
 
-3. All remaining quantity values fall within the range of 0-13 units, with a mean of 3.19 and a standard deviation of 1.50. Assuming that the non-outlier observations represent the true data-generating process, the probability of observing values greater than or equal to 608 is statistically negligible (p < 10⁻³⁰⁰).
+1. The order status does not explain these records: the share of cancelled orders among them (5.3%) is close to the rest of the data (6.1%), so they cannot be assumed to be cancellations.
+2. Their meaning could not be verified. They may represent cancelled or returned items, but also data-entry errors or placeholder values.
+3. They add nothing to revenue, but they distort the order count, the average quantity and the average order value.
+4. They are flagged (is_zero_quantity) and excluded from quantity-based and average-order metrics. They stay in the view, so the decision can be reversed.
 
-4. These records have a substantial impact on the results, increasing the average quantity from 3.19 to 6.83 and accounting for 53.6% of all units sold.
+quantity = 608 (1,570 records, 0.60% of rows)
 
-5. Additionally, quantity 608 appears across 1,152 products, 1,542 customers, multiple countries, and multiple years. Such orders are inconsistent with the distribution of the remaining observations and are not supported by available inventory levels.
+1. The value lies about 404 standard deviations above the mean of the remaining records, and the next highest quantity is 13.
+2. It appears evenly across 1,152 products, 1,542 customers, all countries and all years, and it does not differ from other orders in price (mean 182.6 vs 183.2) or status (5.2% cancelled vs 6.1%). A genuine bulk order would not be expected to show such a uniform pattern, which points to a placeholder or a data error.
+3. Inventory does not support orders of this size: the largest stock level in the inventory table is 567 units.
+4. Their impact is substantial: they raise the average quantity from 3.19 to 6.83 and account for 53.6% of all units sold.
+5. In a production environment I would confirm their meaning with the data owner. This was not possible because the dataset is synthetic.
+6. They are flagged (is_quantity_anomaly) and excluded from the final analytical dataset to prevent distortion of business metrics.
 
-6. Based on these findings, quantity values equal to 608 were classified as anomalous records. They were flagged and excluded from the final analytical dataset to prevent distortion of business metrics and statistical conclusions.
+```
+CREATE OR REPLACE VIEW quantity_cl AS
+SELECT *,
+       (quantity::int = 0)   AS is_zero_quantity,
+       (quantity::int = 608) AS is_quantity_anomaly
+FROM discount_cl;
+```
+Both groups are handled consistently: flagged, documented, and never deleted from the source.
 
 
 ### - unit_price
