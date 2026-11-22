@@ -552,7 +552,12 @@ Discounts are used only for records with a documented value, selected by the fla
 
 <img width="833" height="611" alt="image" src="https://github.com/user-attachments/assets/b56fdaa7-0300-4fb4-852a-2eed7e5c0736" />
 
+Expected outcome: improved data quality, more reliable reporting, reduced manual data cleaning effort.
 
+### Take-Home messages
 
+1. Dirty data distorts results silently. Duplicates, inconsistent labels and placeholder values (e.g. quantity = 608, 0.6% of records but 53.6% of units sold) would have inflated totals and averages if they had not been found and handled.
 
+2. Flagging beats deleting. Cleaning in SQL views kept the raw data intact, and flags make every exclusion visible, auditable and reversible.
 
+3. Most problems can be prevented at the source. Opening the CSV in Excel corrupted 42.88% of discounts into dates, so exporting directly from the system and validating data on entry would remove most of the cleaning work.
