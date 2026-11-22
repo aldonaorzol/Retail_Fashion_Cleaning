@@ -158,6 +158,7 @@ The results show that the products table does not require deduplication, as the 
 3. The two cases require different treatment. Full duplicates can be safely removed (keeping one record). Rows sharing a key but differing in values need a rule for choosing the correct version, such as the most recent record, or manual review.
 4. In inventory, a repeated product_id is expected. The correct uniqueness check is the composite key (product_id + warehouse_country), which passed.
 5. Why it matters for the analysis. Duplicates inflate totals and counts, distort averages and shares, and break the one-to-many relationship between products and sales_orders.
+6. The product_id field contains no duplicate values; therefore, there is no need to filter the data following the most recent update of stock levels. So I decided to omit the column last_stock_update in my analysis.
   
 ### Do the data require standardization?
 
