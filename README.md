@@ -180,13 +180,12 @@ Unstandardized data does not cause errors; it silently distorts results. My quer
 
 3. Why unambiguous values matter. Unambiguous values are important because I will be analyzing sales by country. The order status determines whether an order was actually fulfilled, generated revenue for the company and should be included in the sales results. Inconsistent status values would cause part of the real sales to be excluded or misclassified, which would distort the results for each country.
 
+<h2 align="center">Data Cleaning</h2>
 
 I decided to clean my data in PostgreSQL using Views. I made my decision based on:
 - the raw data won't be changed; if any mistakes occur, correction will be possible.
 - the data will always be updated; views are updated automatically if the database is updated 
 - a view is a clear record of what I have done with the data. This makes the result easy to reproduce and explain.
-
-<h2 align="center">Data Cleaning</h2>
 
 ### DEDUPLICATION - order_id
 
