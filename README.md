@@ -124,7 +124,7 @@ The per-column check of inventory (3,741 records) confirms that the record count
 
 All other columns (product_id, warehouse_country, stock_quantity) contain no NULLs. Inspection of the source file additionally revealed that last_stock_update contains invalid entries that a NULL check does not detect: the text placeholder not_a_date, a non-existent date __(2024-13-40, month 13 and day 40),__ and partial dates without a day __(e.g. 2023-06, 2023-10, 2024-04, 2024-05, 2024-07, 2024-11).__ The same pattern was found in products.launch_date.
 
-The `product_id` field contains no duplicate values; therefore, there is no need to filter the data following the most recent update of stock levels. So I decided to ***omit the column last_stock_update*** in my analysis. 
+Check whether the `product_id` field contains duplicate values. If it does not, there is no need to filter the data based on the date of the last inventory update, and the `last_stock_update` column can be omitted.
 
 #### Explanations:
 1. Complete key and analytical columns. product_id and warehouse_country have no gaps, so the composite key (product_id + warehouse_country), already confirmed as unique, is fully populated and JOIN operations with products are not compromised. stock_quantity is also complete, so stock levels are available for every record.
