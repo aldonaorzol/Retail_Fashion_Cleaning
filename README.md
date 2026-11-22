@@ -186,6 +186,8 @@ I decided to clean my data in PostgreSQL using Views. I made my decision based o
 - the data will always be updated; views are updated automatically if the database is updated 
 - a view is a clear record of what I have done with the data. This makes the result easy to reproduce and explain.
 
+<h2 align="center">Data Cleaning</h2>
+
 ### DEDUPLICATION - order_id
 
 ***Problem:*** 
@@ -425,7 +427,7 @@ FROM status_cl;
 
 Both groups are handled consistently: flagged, documented, and never deleted from the source.
 
-### - unit_price
+### QUALITY VALIDATION - unit_price
 
 <img width="148" height="421" alt="image" src="https://github.com/user-attachments/assets/892790d7-d3fe-4dc5-87b0-2b2155427965" />
 
@@ -481,7 +483,7 @@ FROM status_cl
 
 <img width="224" height="244" alt="image" src="https://github.com/user-attachments/assets/0a92ea37-2f09-49db-a4f3-4067f4ce6b56" />
 
-### - discount_pct
+### RECOVERY PROCESS - discount_pct
 
 <img width="862" height="721" alt="image" src="https://github.com/user-attachments/assets/166ba157-e352-4614-b5da-a0f8b01cc747" />
 
