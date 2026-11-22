@@ -199,7 +199,7 @@ Before:
 ***Solutions:***
 
 ```
-CREATE VIEW dedup_orders AS
+CREATE OR REPLACE VIEW dedup_orders AS
 WITH dedup_orders AS (
     SELECT *,
        ROW_NUMBER() OVER ( PARTITION BY order_id
@@ -477,7 +477,7 @@ SELECT
         ELSE 'OK'
     END AS unit_price_flag
 
-FROM status_cl
+FROM quantity_fl
 ```
 
 <img width="224" height="244" alt="image" src="https://github.com/user-attachments/assets/0a92ea37-2f09-49db-a4f3-4067f4ce6b56" />
