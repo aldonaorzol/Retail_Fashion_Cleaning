@@ -388,6 +388,8 @@ FROM inventory;
 
 ### DATA OUTLIERS - quantity
 
+<img width="632" height="461" alt="image" src="https://github.com/user-attachments/assets/5fc28e3c-f2e6-48d0-b933-0010cb6deed3" />
+
 Apart from two groups of values (0 and 608), quantity ranges from 1 to 13 units. Excluding 608, the mean is 3.19 and the standard deviation is 1.50. I examined both groups in the same way, using the order status, the price and the distribution across products, customers, countries and years.
 
 quantity = 0 (1,038 records, about 0.40% of rows)
@@ -411,7 +413,7 @@ CREATE OR REPLACE VIEW quantity_cl AS
 SELECT *,
        (quantity::int = 0)   AS is_zero_quantity,
        (quantity::int = 608) AS is_quantity_anomaly
-FROM discount_cl;
+FROM status_cl;
 ```
 Both groups are handled consistently: flagged, documented, and never deleted from the source.
 
