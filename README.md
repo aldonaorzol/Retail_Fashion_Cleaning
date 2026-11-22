@@ -479,27 +479,52 @@ FROM status_cl
 
 <img width="862" height="721" alt="image" src="https://github.com/user-attachments/assets/166ba157-e352-4614-b5da-a0f8b01cc747" />
 
-The discount_pct column was stored as text and contained multiple data quality issues. Data profiling revealed three types of values:
-- numeric discounts stored correctly (e.g. 0.0, 13.84),
-- percentage values stored as text with the % symbol (e.g. 10%),
-- invalid values resembling dates with Polish month abbreviations (e.g. 12.lip, 15.mar, 11.lut).
+Problem
+The discount_pct column was stored as text and contained several data quality issues. Profiling showed five types of values:
+- correctly stored numbers (e.g. 0.0, 13.84): 44.70%,
+- numbers with a % symbol (e.g. 10%): 0.41%,
+- values resembling dates with Polish month abbreviations (e.g. lip.41, 01.cze): 42.88%,
+- missing values (NULL): 12.01%.
 
-To improve data quality, a dedicated cleaning view (discount_cl) was created. Values containing month abbreviations were considered invalid because they could not represent a discount percentage. These records were converted to NULL and flagged as INVALID_DATE to preserve information about the data quality issue.
-
-Percentage values stored as text were standardized by removing the % symbol and converting the result to a numeric data type. These records were flagged as PERCENT_CONVERTED.
-
-Valid numeric values were retained without modification and flagged as OK.
-
-This approach allowed the original data to be preserved while creating a clean version of the column.
+Altogether, only 45.10% of the values were stored as numbers.
 
 ***Solutions:***
 
 ```
+CREATE OR REPLACE VIEW discount_cl AS
+SELECT *,
+    ROUND(
+        CASE
+            WHEN discount_pct IS NULL OR TRIM(discount_pct) = ''                   THEN NULL
+            WHEN discount_pct ~ '^[0-9]+(\.[0-9]+)?$'                              THEN discount_pct::numeric
+            WHEN discount_pct ~ '^[0-9]+(\.[0-9]+)?%$'                             THEN REPLACE(discount_pct, '%', '')::numeric
+            WHEN discount_pct ~ '^(sty|lut|mar|kwi|maj|cze|lip|sie|wrz|paź|lis|gru)\.[0-9]{2}$'
+                 THEN ARRAY_POSITION(
+                          ARRAY['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź','lis','gru'],
+                          SPLIT_PART(discount_pct, '.', 1))
+                      + SPLIT_PART(discount_pct, '.', 2)::numeric / 100
+            ELSE NULL
+        END,
+    2) AS discount_pct_clean,
 
+    CASE
+        WHEN discount_pct IS NULL OR TRIM(discount_pct) = ''                       THEN 'MISSING'
+        WHEN discount_pct ~ '^[0-9]+(\.[0-9]+)?$'                                  THEN 'OK'
+        WHEN discount_pct ~ '^[0-9]+(\.[0-9]+)?%$'                                 THEN 'PERCENT_CONVERTED'
+        WHEN discount_pct ~ '^(sty|lut|mar|kwi|maj|cze|lip|sie|wrz|paź|lis|gru)\.[0-9]{2}$'
+                                                                                   THEN 'RECOVERED_MONTH_YEAR'
+        WHEN discount_pct ~ '^[0-9]{2}\.(sty|lut|mar|kwi|maj|cze|lip|sie|wrz|paź|lis|gru)$'
+                                                                                   THEN 'AMBIGUOUS_DAY_MONTH'
+        ELSE 'OTHER_INVALID'
+    END AS discount_pct_flag
+FROM unit_price_cl;
 ```
 
-***Final decision:***
-Discount percentage (discount_pct) was excluded from the final analysis. Data quality assessment revealed a high proportion of missing and invalid values, including date-like strings stored in a discount field. Although several cleaning rules were applied, the remaining data quality was insufficient to support reliable statistical conclusions. Only 45.10 % were expressed numerically. 
+I created a cleaning view (discount_cl) that keeps the original column and adds discount_pct_clean (numeric, rounded to two decimals) and discount_pct_flag.
+
+After deduplication (260,000 records), a usable discount is available for 190,447 records (73.25%): 26,048 with a discount of 0 and 164,399 with a discount above 0. The remaining 69,553 records (26.75%) are NULL.
+
+Discounts are used only for records with a documented value, selected by the flag. Results based on discounts are reported for this subset (73.25%) and not for all orders.
 
 <img width="684" height="158" alt="image" src="https://github.com/user-attachments/assets/18d21cf1-f87d-4532-bee8-8b21701d3a9e" />
 
