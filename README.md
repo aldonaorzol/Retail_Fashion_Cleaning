@@ -143,7 +143,7 @@ I check compared the number of rows with the number of distinct key values in ea
 
 <img width="782" height="690" alt="image" src="https://github.com/user-attachments/assets/b8233935-e21b-4ec9-8981-84ce80f031a5" />
 
-The results confirm that real duplicate records exist in the sales_orders table. They will be removed in the next step.
+The results confirm that 780 order_id values appear twice. A comparison across all columns showed that every repeated order_id consists of identical rows, so these are true duplicates, not conflicting versions of the same order. They are removed in the next step, keeping one row per order_id.
 
 <img width="964" height="265" alt="image" src="https://github.com/user-attachments/assets/3f0436cf-f540-4945-9270-52392fa700e0" />
 
