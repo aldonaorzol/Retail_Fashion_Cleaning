@@ -488,6 +488,9 @@ The discount_pct column was stored as text and contained several data quality is
 
 Altogether, only 45.10% of the values were stored as numbers.
 
+Root cause
+The source file had been opened and saved in Excel with Polish regional settings, where a dot is read as a date separator. Discounts such as 7.41 were converted to dates (displayed as lip.41), and values such as 1.6 to 01.cze. A simulation of this conversion on the original file reproduced the observed shares (42.96% vs 42.88% in the database), which confirms the explanation.
+
 ***Solutions:***
 
 ```
