@@ -226,7 +226,7 @@ After:
 ### DATE FORMAT STANDARDIZATION - order_date 
 
 ***Problem:***
-The order_date column mixed several text formats: YYYY-MM-DD, DD-MM-YYYY, DD.MM.YYYY and YYYY-MM. Some values were also impossible dates, such as 2024-13-40. 
+order_date was stored as text. 99.01% of records (257,414) were in the DD.MM.YYYY format and 0.27% (694) were partial dates in the YYYY-MM format. The remaining 0.73% (1,892 of 260,000 records) had no usable date: 629 NULLs, 660 not_a_date placeholders and 603 non-existent dates (e.g. 2024-13-40).
 
 <img width="394" height="170" alt="image" src="https://github.com/user-attachments/assets/b3bb7774-8851-4087-a5b0-585db9cf1445" />
 
@@ -247,13 +247,21 @@ t AS (
     SELECT s.*,
         CASE
             WHEN od IS NULL THEN 'source_null'
-            WHEN od ~ '^(0[1-9]|[12]\d|3[01])\.(0[1-9]|1[0-2])\.\d{4}$' THEN 'dd.mm.yyyy'
-            WHEN od ~ '^(0[1-9]|[12]\d|3[01])-(0[1-9]|1[0-2])-\d{4}$'   THEN 'dd-mm-yyyy'
-            WHEN od ~ '^(0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/\d{4}$'   THEN 'dd/mm/yyyy'
-            WHEN od ~ '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'   THEN 'yyyy-mm-dd'
-            WHEN od ~ '^\d{4}/(0[1-9]|1[0-2])/(0[1-9]|[12]\d|3[01])$'   THEN 'yyyy/mm/dd'
-            WHEN od ~ '^\d{4}\.(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])$' THEN 'yyyy.mm.dd'
-            WHEN od ~ '^\d{4}-(0[1-9]|1[0-2])$'                         THEN 'yyyy-mm'
+
+            -- DD.MM.YYYY: format check, then calendar check (e.g. rejects 31.02.2023)
+            WHEN od ~ '^(0[1-9]|[12]\d|3[01])\.(0[1-9]|1[0-2])\.(19|20)\d{2}$' THEN
+                CASE
+                    WHEN EXTRACT(MONTH FROM
+                           (SUBSTRING(od, 7, 4) || '-' || SUBSTRING(od, 4, 2) || '-01')::date
+                           + (SUBSTRING(od, 1, 2)::int - 1))
+                         = SUBSTRING(od, 4, 2)::int
+                    THEN 'dd.mm.yyyy'
+                    ELSE 'UNRECOGNIZED'
+                END
+
+            -- YYYY-MM (year and month only)
+            WHEN od ~ '^(19|20)\d{2}-(0[1-9]|1[0-2])$' THEN 'yyyy-mm'
+
             ELSE 'UNRECOGNIZED'
         END AS order_date_status
     FROM s
@@ -261,32 +269,29 @@ t AS (
 SELECT t.*,
     CASE order_date_status
         WHEN 'dd.mm.yyyy' THEN TO_DATE(od, 'DD.MM.YYYY')
-        WHEN 'dd-mm-yyyy' THEN TO_DATE(od, 'DD-MM-YYYY')
-        WHEN 'dd/mm/yyyy' THEN TO_DATE(od, 'DD/MM/YYYY')
-        WHEN 'yyyy-mm-dd' THEN TO_DATE(od, 'YYYY-MM-DD')
-        WHEN 'yyyy/mm/dd' THEN TO_DATE(od, 'YYYY/MM/DD')
-        WHEN 'yyyy.mm.dd' THEN TO_DATE(od, 'YYYY.MM.DD')
         WHEN 'yyyy-mm'    THEN TO_DATE(od || '-01', 'YYYY-MM-DD')
-    END AS order_date_val
+    END AS order_date_val,
+
+    CASE
+        WHEN order_date_status = 'UNRECOGNIZED' AND LOWER(od) = 'not_a_date' THEN 'not_a_date'
+        WHEN order_date_status = 'UNRECOGNIZED'                              THEN 'non_existent_date'
+    END AS order_date_issue,
+
+    (order_date_status = 'yyyy-mm') AS is_date_approximate
 FROM t;
 ```
 
-I decided to use:
-- CTE, because it lets me split the cleaning into clear, named steps (trimming blank values, classifying the format, then converting to DATE) instead of nesting subqueries. The status is calculated once and reused for the conversion, so the logic is easy to read, test, and change in one place.
-- CASE function, because the dates arrive in several different text formats, and each one needs its own rule. CASE checks the formats in a defined order and applies the matching TO_DATE pattern only to values that pass validation, so invalid values never reach the conversion and cannot break the view.
-- Give a flag, because replacing a value with NULL without explanation would hide what happened to the record. The order_date_status flag shows which format each date had and which values were unrecognized or missing, so the cleaning stays transparent, can be audited, and lets me decide separately how to treat each group in the analysis.
+Why I used these functions:
+- CTE, because it splits the cleaning into clear, named steps (trimming blank values, classifying the format, then converting to DATE) instead of nesting subqueries. The status is calculated once and reused for the conversion.
+- CASE, because each format needs its own rule. The checks run in a defined order, and a value is converted with TO_DATE only after it passes both the format check and the calendar check, so invalid values cannot break the view.
+- Flags, because replacing a value with NULL without explanation would hide what happened to the record. order_date_status, order_date_issue and is_date_approximate show how each date was interpreted, so the cleaning is transparent and can be audited.
 
-After:
-
-<img width="196" height="536" alt="image" src="https://github.com/user-attachments/assets/6533c9b9-dc94-4e5d-8eda-d485cc059a14" />
-
-***What I have done:***
-
-1. I standardized order_date in a view built on CTEs. Blank values are treated as NULL, and each text value is classified with a strict regular expression (literal dots escaped as \.) that checks the valid ranges for month (01–12) and day (01–31).
-2. Only values that match a pattern are converted to the DATE type with TO_DATE, using the format specific to each pattern. For day-first formats I confirmed the order by checking that the day reaches 31 while the month never exceeds 12.
-3. Values that match no pattern (e.g., not_a_date, 2024-13-40) become NULL with the status UNRECOGNIZED, and empty values get source_null. Together they account for 0.73% of all records. I kept them in the view, flagged, and excluded them only from time-based analysis.
-4. Records in the yyyy-mm format were assigned the first day of the month and are flagged, so they should be used only for monthly or yearly analysis.
-5. The order_date_status column documents how each date was interpreted so the cleaning can be audited.
+What I have done:
+1. I standardized order_date in a view built on CTEs. Blank values are treated as NULL, and each text value is classified with a strict regular expression that checks the valid ranges for month (01–12) and day (01–31), plus a calendar check for the number of days in the month.
+2. Only values that pass validation are converted to the DATE type. The day-first order was confirmed by checking that the day reaches 31 while the month never exceeds 12.
+99.01% of records received a full date and 0.27% a month-level date (assigned to the first day of the month and flagged as approximate, so it is suitable only for monthly or yearly analysis).
+3. Values that match no pattern become NULL with the status UNRECOGNIZED and a reason in order_date_issue. Together with the 629 missing values they make up 0.73% of records, which are excluded only from time-based analysis.
+4. The share was first reported as 0.49% during profiling (1,290 of 260,780 raw records: 629 NULLs and 661 not_a_date). After deduplication and validation it is 0.73% (1,892 of 260,000), because non-existent dates such as 2024-13-40 could be detected only during parsing.
 
 <img width="1155" height="695" alt="image" src="https://github.com/user-attachments/assets/56620d74-971b-4004-a75e-b50fd6a7aa46" />
 
@@ -377,8 +382,8 @@ SELECT *,
         WHEN UPPER(TRIM(warehouse_country)) IN ('CZ', 'CZECH', 'CZECHIA', 'CZECH REPUBLIC') THEN 'Czech'
         WHEN UPPER(TRIM(warehouse_country)) IN ('DE', 'GER', 'GERMANY', 'DEUTSCHLAND')      THEN 'Germany'
         WHEN UPPER(TRIM(warehouse_country)) IN ('PL', 'POL', 'POLAND', 'POLSKA')            THEN 'Poland'
-    ELSE NULL
-    END AS clear_country
+    ELSE 'UNMAPPED'
+    END AS warehouse_country_cl
 FROM inventory;
 ```
 
