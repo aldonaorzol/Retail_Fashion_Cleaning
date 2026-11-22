@@ -421,6 +421,8 @@ WHERE unit_price !~ '^[0-9]+(\.[0-9]+)?$';
 
 Data quality validation identified 8 records where the unit_price field contained date values (e.g., "28.mar", "26.kwi") instead of numeric prices. Since the field is intended to store monetary values only, these observations were classified as data entry or import errors and excluded from all price-related analyses.
 
+Root cause: the source CSV was opened and saved in Excel with Polish regional settings, where a dot is read as a date separator. Values such as 24.8 were converted to dates (displayed as 24.sie), so the original number was lost.
+
 <img width="335" height="364" alt="image" src="https://github.com/user-attachments/assets/5fcfd473-d4f8-489c-891d-169a1140df72" />
 
 <img width="249" height="562" alt="image" src="https://github.com/user-attachments/assets/ebb33bb3-a6f3-4e35-98d2-4f8518b8881b" /> 
