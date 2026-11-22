@@ -542,6 +542,9 @@ FROM unit_price_cl;
 ***Final decision:***
 Discount percentage (discount_pct) was excluded from the final analysis. Data quality assessment revealed a high proportion of missing and invalid values, including date-like strings stored in a discount field. Although several cleaning rules were applied, the remaining data quality was insufficient to support reliable statistical conclusions. Only 45.10 % were expressed numerically. 
 
+<img width="684" height="158" alt="image" src="https://github.com/user-attachments/assets/18d21cf1-f87d-4532-bee8-8b21701d3a9e" />
+
+
 ***The data has been cleaned and is ready for analysis. The sample below shows what it looks like after cleaning.***
 
 
