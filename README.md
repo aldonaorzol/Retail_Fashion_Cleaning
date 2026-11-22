@@ -541,6 +541,12 @@ Discounts are used only for records with a documented value, selected by the fla
 
 ***The data has been cleaned and is ready for analysis. The sample below shows what it looks like after cleaning.***
 
+<img width="1162" height="746" alt="image" src="https://github.com/user-attachments/assets/834bd481-3dca-4d97-9c73-566aa1f594d6" />
+
+<img width="362" height="667" alt="image" src="https://github.com/user-attachments/assets/c9f41034-bfaf-4758-b9ce-985d807172d6" />
+
+<img width="331" height="670" alt="image" src="https://github.com/user-attachments/assets/43375075-902e-4c86-ae1a-c3a19824bc37" />
+
 
 ### Recommendations for future data collection
 
