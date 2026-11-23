@@ -608,7 +608,7 @@ Why not a simpler approach? Casting the column directly would raise an error on 
 
 ### The data has been cleaned and is ready for analysis.
 
-<img width="1164" height="548" alt="image" src="https://github.com/user-attachments/assets/47993d2a-68b0-4215-99a8-3b538fb08eca" />
+
 
 <img width="362" height="667" alt="image" src="https://github.com/user-attachments/assets/c9f41034-bfaf-4758-b9ce-985d807172d6" />
 
@@ -618,8 +618,6 @@ Why not a simpler approach? Casting the column directly would raise an error on 
 ### Recommendations for future data collection
 
 <img width="833" height="611" alt="image" src="https://github.com/user-attachments/assets/b56fdaa7-0300-4fb4-852a-2eed7e5c0736" />
-
-Expected outcome: improved data quality, more reliable reporting, reduced manual data cleaning effort.
 
 ### Take-Home messages
 
