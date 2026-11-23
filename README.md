@@ -94,15 +94,15 @@ FROM products;
 <img width="783" height="78" alt="image" src="https://github.com/user-attachments/assets/155236b4-59b0-46ed-8a3c-57089674ffdb" />
 
 #### Insights: 
-The per-column check of products 2,500 records confirms that the record count is correct. It also shows that missing values occur in only one column:
+The per-column check of products 2,500 records confirms that the record count is correct. It also shows that missing values occur in only one column: 
 - launch_date: __91 NULLs about 3.6% of rows__
-All other columns product_id, category, sub_category, base_price contain no NULLs.
+- All other columns product_id, category, sub_category, base_price contain no NULLs.
 
 <img width="449" height="735" alt="image" src="https://github.com/user-attachments/assets/23dddca6-e5e8-4032-9257-20fe4403bb02" />
 
 #### Explanations:
 
-1.Complete key and analytical columns, product_id has no gaps, so JOIN operations with sales_orders and inventory are not compromised.
+1. Complete key and analytical columns, product_id has no gaps, so JOIN operations with sales_orders and inventory are not compromised.
 
 2. launch_date has 91 missing values that are documented, but __they do not affect this project the column is not used in the analysis__, so the affected rows are retained and no imputation or removal is required.  These records would need to be reviewed, as they could not be included in analyses such as product age or the effect of new launches on sales.
 
@@ -165,7 +165,7 @@ The results show that the inventory table does not require deduplication, as the
 <img width="816" height="467" alt="image" src="https://github.com/user-attachments/assets/2add5a63-a247-4cc8-9a5e-74ae24544f09" />
 
 #### Insights:
-Unstandardized data does not cause errors; it silently distorts results. My queries and charts will run without any problem, and the numbers will look credible, but they will be wrong. When the data is aggregated, France will appear as three separate rows, France, france and FR, each holding only a fraction of the actual sales. The country ranking will therefore depend on how consistently someone typed the name, not on real sales.
+Unstandardized data does not cause errors. It silently distorts results. My queries and charts will run without any problem, and the numbers will look credible, but they will be wrong. When the data is aggregated, France will appear as three separate rows, France, france and FR, each holding only a fraction of the actual sales. The country ranking will therefore depend on how consistently someone typed the name, not on real sales.
 
 <img width="183" height="522" alt="image" src="https://github.com/user-attachments/assets/111310b7-219d-4e53-b58f-cd3c2291e781" />
 <img width="164" height="496" alt="image" src="https://github.com/user-attachments/assets/0093749a-84cb-4bef-b655-a7f2ffea40ae" />
@@ -189,7 +189,9 @@ I decided to clean my data in PostgreSQL using Views. I made my decision based o
 ### DEDUPLICATION - order_id
 
 ***Problem:*** 
-Duplicated records in order_id column. I verified this issue above. 
+The sales_orders table contained multiple rows with the same order_id, indicating duplicate records. Because each order should be represented only once, these duplicates could cause double-counting in downstream analyses and reporting.
+
+To ensure data consistency, the dataset needed to be deduplicated while preserving one representative record for each order_id. This required identifying duplicate rows within each order group and filtering the dataset to keep only the first occurrence of every unique order.
 
 Before:
 
@@ -440,11 +442,29 @@ FROM status_cl;
 ```
 Both groups are handled consistently: flagged, documented, and never deleted from the source.
 
-***Explanation of the Solution:*** !!!!!!!!!!!!!!!!!!!
+***Explanation of the Solution:***
+1. The expression __quantity::int = 0__ creates the is_zero_quantity flag. Records with a quantity equal to zero are identified because their business meaning cannot be verified. Although they do not contribute to revenue, they can distort metrics such as order count, average quantity, and average order value.
+
+2. The expression __quantity::int = 608__ creates the is_quantity_anomaly flag. This value was classified as anomalous because it is far outside the normal distribution of sales quantities, where almost all orders contain between 1 and 13 units.
+
+3. Boolean flags (TRUE/FALSE) were used instead of deleting records or replacing values. This makes the cleaning process fully transparent, reversible, and auditable, allowing future analysts to review or reconsider the assumptions behind the treatment of these observations.
+
+4. Separating anomaly detection from anomaly removal follows a common data-quality practice. The view identifies records that may require special treatment, while the final analytical dataset can decide whether to include or exclude them depending on the business objective.
+
+5. The solution preserves data lineage by keeping all original records available for investigation. This is particularly important because the true meaning of the anomalous values could not be confirmed with a data owner, and therefore a conservative approach was adopted.
+
+6. By flagging both groups instead of deleting them, the dataset remains suitable for data-quality audits while preventing extreme values from distorting KPIs such as total units sold, average quantity per order, and trend analysis.
+
+Both groups of records are handled consistently: they are identified, documented, and flagged, ensuring that analytical decisions are explicit and reproducible rather than hidden inside the cleaning process.
 
 ### QUALITY VALIDATION - unit_price
 
-***Problem:*** !!!!!!!!!!!!!!!!!!!
+***Problem:***
+- 8 records contained date values such as 28.mar and 26.kwi instead of numeric prices. These values resulted from an Excel conversion error and could not be reliably restored to their original numbers.
+  
+- 1,608 records had a price equal to 0. Unlike the date values, zero-priced transactions may represent valid business events e.g., freebies or promotions and therefore could not be automatically classified as errors.
+
+Before analysis, it was necessary to distinguish between corrupted price values and potentially valid zero-priced transactions to prevent distortions in revenue and price-based metrics while preserving data transparency.
 
 <img width="148" height="421" alt="image" src="https://github.com/user-attachments/assets/892790d7-d3fe-4dc5-87b0-2b2155427965" />
 
