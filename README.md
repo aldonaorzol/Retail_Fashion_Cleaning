@@ -242,58 +242,37 @@ Before:
 
 ```
 CREATE OR REPLACE VIEW date_clean AS
-WITH s AS (
-    SELECT d.*, NULLIF(TRIM(d.order_date), '') AS od
-    FROM dedup_orders d
-),
-t AS (
-    SELECT s.*,
-        CASE
-            WHEN od IS NULL THEN 'source_null'
+SELECT *,
+    CASE
+        WHEN order_date ~ '^\d{2}\.\d{2}\.\d{4}$'
+            THEN TO_DATE(order_date, 'DD.MM.YYYY')
 
-            -- DD.MM.YYYY: format check, then calendar check (e.g. rejects 31.02.2023)
-            WHEN od ~ '^(0[1-9]|[12]\d|3[01])\.(0[1-9]|1[0-2])\.(19|20)\d{2}$' THEN
-                CASE
-                    WHEN EXTRACT(MONTH FROM
-                           (SUBSTRING(od, 7, 4) || '-' || SUBSTRING(od, 4, 2) || '-01')::date
-                           + (SUBSTRING(od, 1, 2)::int - 1))
-                         = SUBSTRING(od, 4, 2)::int
-                    THEN 'dd.mm.yyyy'
-                    ELSE 'UNRECOGNIZED'
-                END
+        WHEN order_date ~ '^\d{4}-\d{2}$'
+            THEN TO_DATE(order_date || '-01', 'YYYY-MM-DD')
 
-            -- YYYY-MM (year and month only)
-            WHEN od ~ '^(19|20)\d{2}-(0[1-9]|1[0-2])$' THEN 'yyyy-mm'
-
-            ELSE 'UNRECOGNIZED'
-        END AS order_date_status
-    FROM s
-)
-SELECT t.*,
-    CASE order_date_status
-        WHEN 'dd.mm.yyyy' THEN TO_DATE(od, 'DD.MM.YYYY')
-        WHEN 'yyyy-mm'    THEN TO_DATE(od || '-01', 'YYYY-MM-DD')
+        ELSE NULL
     END AS order_date_val,
 
     CASE
-        WHEN order_date_status = 'UNRECOGNIZED' AND LOWER(od) = 'not_a_date' THEN 'not_a_date'
-        WHEN order_date_status = 'UNRECOGNIZED'                              THEN 'non_existent_date'
-    END AS order_date_issue,
+        WHEN LOWER(order_date) = 'not_a_date'
+            THEN 'INVALID_DATE'
+        ELSE 'OK'
+    END AS order_date_flag,
 
-    (order_date_status = 'yyyy-mm') AS is_date_approximate
-FROM t;
+    (order_date ~ '^\d{4}-\d{2}$') AS is_date_approximate
+
+FROM dedup_orders;
 ```
 ***Explanation of the Solution:***
-- __CTE__ because it splits the cleaning into clear, named steps trim blanks, classify the format, convert to DATE, and the status is calculated once and reused.
-- __CASE__ because each format needs its own rule. A value is converted with TO_DATE only after it passes the format and calendar checks, so invalid values cannot break the view.
-- __Flags__ because they show how each date was interpreted (order_date_status, order_date_issue, is_date_approximate), so the cleaning is transparent and can be audited.
+- __CASE__ expressions were used to identify supported date formats and apply the appropriate conversion rule.
+- Values in the DD.MM.YYYY format are converted directly to the SQL DATE type using __TO_DATE()__.
+- Partial dates stored as YYYY-MM are converted by assigning the first day of the month (YYYY-MM-01) and flagged as approximate.
+- Records that do not match either supported format are converted to NULL, preventing invalid values from affecting time-based analyses.
+- The order_date_flag column identifies records containing the not_a_date placeholder, while is_date_approximate distinguishes month-level dates from exact dates.
 
-***Result:***
-- __99.01% of records received a full date__, and 0.27% a month-level date set to the first day of the month and flagged as approximate, so suitable only for monthly or yearly analysis.
-- 0.73% 1,892 of 260,000 records have no usable date: 629 missing values and 1,263 unrecognized ones not_a_date or non-existent dates such as 2024-13-40. They become NULL with a reason in order_date_issue and are excluded only from time-based analysis.
-- During profiling this share was reported as 0.49% 1,290 of 260,780 raw records: 629 NULLs and 661 not_a_date. It is higher after deduplication and validation, because non-existent dates could be detected only during parsing.
+After:
 
-<img width="1155" height="695" alt="image" src="https://github.com/user-attachments/assets/56620d74-971b-4004-a75e-b50fd6a7aa46" />
+<img width="1202" height="417" alt="image" src="https://github.com/user-attachments/assets/ebfbf71a-4c58-459e-9b62-8c26b857c8d2" />
 
 ### DATA STANDARDIZATION - country
 
