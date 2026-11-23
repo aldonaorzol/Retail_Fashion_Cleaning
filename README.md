@@ -189,7 +189,7 @@ I decided to clean my data in PostgreSQL using Views. I made my decision based o
 ### DEDUPLICATION - order_id
 
 ***Problem:*** 
-Duplicated orders in order_id column. I veryfying this issue above. 
+Duplicated records in order_id column. I verified this issue above. 
 
 Before:
 
@@ -215,7 +215,7 @@ After:
 
 <img width="857" height="171" alt="image" src="https://github.com/user-attachments/assets/9821975f-bd5b-4cf1-9a1c-068d6426ab55" />
 
-***Why this query is appropriate:***
+***Explanation of the Solution:***
 
 1. Cannot filter by ROW_NUMBER() in the same SELECT statement, because window functions are evaluated after the WHERE clause. A __CTE__ allows to calculate the number first and then filter by it.
 2. __ROW_NUMBER()__ assigns each row a sequential number within its group. It takes no arguments, because the numbering does not depend on the values of the records.
@@ -281,22 +281,24 @@ SELECT t.*,
     (order_date_status = 'yyyy-mm') AS is_date_approximate
 FROM t;
 ```
+***Explanation of the Solution:***
+- __CTE__ because it splits the cleaning into clear, named steps trim blanks, classify the format, convert to DATE, and the status is calculated once and reused.
+- __CASE__ because each format needs its own rule. A value is converted with TO_DATE only after it passes the format and calendar checks, so invalid values cannot break the view.
+- __Flags__ because they show how each date was interpreted (order_date_status, order_date_issue, is_date_approximate), so the cleaning is transparent and can be audited.
 
-Why I used these functions:
-- __CTE__ because it splits the cleaning into clear, named steps trimming blank values, classifying the format, then converting to DATE instead of nesting subqueries. The status is calculated once and reused for the conversion.
-- __CASE__ because each format needs its own rule. The checks run in a defined order, and a value is converted with TO_DATE only after it passes both the format check and the calendar check, so invalid values cannot break the view.
-- __Flags__ because replacing a value with NULL without explanation would hide what happened to the record. order_date_status, order_date_issue and is_date_approximate show how each date was interpreted, so the cleaning is transparent and can be audited.
-
-What I have done:
-1. I standardized order_date in a view built on CTEs. Blank values are treated as NULL, and each text value is classified with a strict regular expression that checks the valid ranges for month 01–12 and day 01–31, plus a calendar check for the number of days in the month.
-2. Only values that pass validation are converted __to the DATE type__. The day-first order was confirmed by checking that the day reaches 31 while the month never exceeds 12.
-99.01% of records received a full date and 0.27% a month-level date assigned to the first day of the month and flagged as approximate, so it is suitable only for monthly or yearly analysis.
-3. Values that match no pattern become NULL with the __status UNRECOGNIZED__ and a reason in order_date_issue. Together with the 629 missing values they make up __0.73%__ of records, which are excluded only from time-based analysis.
-4. The share was first reported as 0.49% during profiling 1,290 of 260,780 raw records: 629 NULLs and 661 not_a_date. After deduplication and validation it is 0.73% 1,892 of 260,000, because non-existent dates such as 2024-13-40 could be detected only during parsing.
+***Result:***
+- __99.01% of records received a full date__, and 0.27% a month-level date set to the first day of the month and flagged as approximate, so suitable only for monthly or yearly analysis.
+- 0.73% 1,892 of 260,000 records have no usable date: 629 missing values and 1,263 unrecognized ones not_a_date or non-existent dates such as 2024-13-40. They become NULL with a reason in order_date_issue and are excluded only from time-based analysis.
+- During profiling this share was reported as 0.49% 1,290 of 260,780 raw records: 629 NULLs and 661 not_a_date. It is higher after deduplication and validation, because non-existent dates could be detected only during parsing.
 
 <img width="1155" height="695" alt="image" src="https://github.com/user-attachments/assets/56620d74-971b-4004-a75e-b50fd6a7aa46" />
 
 ### DATA STANDARDIZATION - country
+
+***Problem:***
+The country column contained multiple representations of the same country, including abbreviations, alternative country names, local-language names, and inconsistent formatting. For example, Germany appeared as DE, GER, Germany, and Deutschland, while Poland appeared as PL, POL, Poland, and Polska.
+
+As a result, grouping or aggregating data by country would produce fragmented results, where one country could be counted as several separate categories. To improve data quality and ensure accurate analysis, the country values had to be normalized into a unified format.
 
 <img width="619" height="583" alt="image" src="https://github.com/user-attachments/assets/cdbffa8e-cf31-468e-b8a2-8e8a7621857f" />
 
@@ -324,7 +326,7 @@ FROM date_clean;
 ```
 <img width="173" height="293" alt="image" src="https://github.com/user-attachments/assets/6ae65975-952f-45f7-9969-91509b7430a9" />
 
-***Explanation of my choices:***
+***Explanation of the Solution:***
 
 1. Country names were standardized using the __CASE__ statement, which allows multiple variants of the same country name to be mapped to a single, consistent value. This approach is transparent, easy to maintain, and simple to extend with additional mappings when needed, without modifying the source data.
 
@@ -335,6 +337,12 @@ FROM date_clean;
 4. The __ELSE 'UNMAPPED'__ clause makes it possible to identify values that are not covered by the existing mapping rules. This helps detect data entry errors, misspellings, or new country name variations that should be included in the standardization process. It is a safer approach than assigning unknown values to an existing category, as it reduces the risk of incorrect data classification and improves overall data quality.
 
 ### DATA STANDARDIZATION - status
+
+***Problem:***
+
+The status column lacked standardization and contained multiple textual representations of the same business process stage. Equivalent statuses were stored under different values, including abbreviations (SHIP), alternative forms (SHIPPED), and synonymous completion statuses (DONE, COMPLETE, COMPLETED). The data also contained formatting inconsistencies such as different letter casing and potential leading or trailing spaces.
+
+Without standardization, aggregations based on order status would produce duplicated categories and distorted analytical results. Therefore, a data-cleaning step was required to normalize status values into a consistent and analysis-ready format.
 
 <img width="643" height="628" alt="image" src="https://github.com/user-attachments/assets/c20692a3-a971-4157-af09-757b73a1ede2" />
 
@@ -356,7 +364,7 @@ FROM clear_country;
 
 <img width="146" height="120" alt="image" src="https://github.com/user-attachments/assets/80682117-55bd-4a49-be65-2e308c620541" />
 
-***Explanation of my choices:***
+***Explanation of the Solution:***
 
 1. The __CASE__ statement was used to standardize the values in the status column. As a result, different variants representing the same order status, such as "SHIP" and "SHIPPED" or "DONE", "COMPLETE", and "COMPLETED", are mapped to a single, __consistent category__. Standardizing status values improves data quality and ensures more reliable analysis and reporting.
 
@@ -369,6 +377,10 @@ FROM clear_country;
 5. The __ELSE NULL__ clause preserves information about statuses that are not covered by the existing mapping rules. This makes it easier to identify unexpected values, misspellings, or new status variants that should be included in the standardization process, rather than incorrectly assigning them to an existing category.
 
 ### DATA STANDARDIZATION - warehouse_country
+
+***Problem:***
+
+The warehouse_country column lacked standardization and contained multiple variations of the same country, including ISO codes, abbreviations, local-language names, and full country names. As a result, inventory records belonging to the same country could be split across multiple categories, leading to inaccurate aggregations and reporting. A data-cleaning step was required to normalize the values into a consistent and analysis-ready format.
 
 <img width="429" height="520" alt="image" src="https://github.com/user-attachments/assets/af185b36-f0e3-4d06-81c1-29414620ddc2" />
 
@@ -388,7 +400,7 @@ SELECT *,
 FROM inventory;
 ```
 
-***Explanation***
+***Explanation of the Solution:***
 - I created a view warehouse_country_cl with a __CASE__ expression that maps every variant to a single standardized country name.
 - Each value is first normalized with __UPPER(TRIM(warehouse_country))__, so the mapping does not depend on capitalization or leading/trailing spaces. __IN (...)__ lists group all known variants of a country under one label.
 - The original column is kept next to the new clear_country column, so the cleaning stays transparent and auditable, and the raw table is never modified.
@@ -396,7 +408,7 @@ FROM inventory;
 
 ### DATA OUTLIERS - quantity
 
-<img width="632" height="461" alt="image" src="https://github.com/user-attachments/assets/5fc28e3c-f2e6-48d0-b933-0010cb6deed3" />
+***Problem:***
 
 Apart from two groups of values __0 and 608__, quantity ranges from 1 to 13 units. Excluding 608, the mean is 3.19 and the standard deviation is 1.50. I examined both groups in the same way, using the order status, the price and the distribution across products, customers, countries and years.
 
@@ -415,6 +427,8 @@ quantity = 608 __1,570 records, 0.60% of rows__
 4. Their impact is substantial: they raise the average quantity from 3.19 to 6.83 and account for 53.6% of all units sold.
 5. In a production environment I would confirm their meaning with the data owner. This was not possible because the dataset is synthetic.
 6. They are flagged is_quantity_anomaly and excluded from the final analytical dataset to prevent distortion of business metrics.
+   
+<img width="632" height="461" alt="image" src="https://github.com/user-attachments/assets/5fc28e3c-f2e6-48d0-b933-0010cb6deed3" />
 
 ***Solutions:***
 ```
@@ -426,9 +440,11 @@ FROM status_cl;
 ```
 Both groups are handled consistently: flagged, documented, and never deleted from the source.
 
-***Explanation*** !!!!!!!!!!!!!!!!!!!
+***Explanation of the Solution:*** !!!!!!!!!!!!!!!!!!!
 
 ### QUALITY VALIDATION - unit_price
+
+***Problem:*** !!!!!!!!!!!!!!!!!!!
 
 <img width="148" height="421" alt="image" src="https://github.com/user-attachments/assets/892790d7-d3fe-4dc5-87b0-2b2155427965" />
 
@@ -484,7 +500,7 @@ FROM quantity_fl
 
 <img width="224" height="244" alt="image" src="https://github.com/user-attachments/assets/0a92ea37-2f09-49db-a4f3-4067f4ce6b56" />
 
-***What I have done***
+***Explanation of the Solution:***
 1. A regular expression identifies exactly the corrupted values. The pattern __^[0-9]{1,2}\.(sty|lut|...|gru)$__ matches the whole string in the form “day.Polish month abbreviation”. The anchors __^...$__ prevent partial matches, the escaped dot (\.) is read as a literal dot, and {1,2} covers days written with one or two digits. The profiling query that searched for every value not shaped like a number returned only these 8 values, and all of them match this pattern, so the rule covers the whole problem and nothing else.
 
 2. CASE makes the conversion safe. A direct CAST of the whole column would fail on the first value such as 24.sie. Because CASE evaluates the cast only in the branch for values that did not match the date pattern, the view works for all other records.
@@ -542,14 +558,14 @@ SELECT *,
 FROM unit_price_cl;
 ```
 
-***Explanation***
+***Results:***
 1. I created a cleaning view discount_cl that keeps the original column and adds discount_pct_clean numeric, rounded to two decimals and discount_pct_flag.
 2. After deduplication 260,000 records, a usable discount is available for 190,447 records 73.25%: 26,048 with a discount of 0 and 164,399 with a discount above 0. The remaining __69,553 records 26.75% are NULL__.
 3. Discounts are used only for records with a documented value, selected by the flag. __Results based on discounts__ are reported for this __subset 73.25%__ and not for all orders.
 
 <img width="684" height="158" alt="image" src="https://github.com/user-attachments/assets/18d21cf1-f87d-4532-bee8-8b21701d3a9e" />
 
-***What I have done:***
+***Explanation of the Solution:***
 1. __CASE__ handles each type of value with its own rule.The conditions are checked in a fixed order, and only the result expression of the matching branch is evaluated. A text value is therefore cast to numeric only after it has passed the matching pattern, so invalid values cannot break the view. Anything unexpected falls into ELSE and is not silently converted.
 
 2. Anchored regular expressions __(^...$)__ validate the whole string. Matching the entire value, not just a part of it, prevents false positives e.g. a string containing a number plus other characters. Escaping the dot (\.) ensures it is read as a literal dot, not as any character.
