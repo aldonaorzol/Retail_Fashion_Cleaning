@@ -484,21 +484,32 @@ FROM quantity_fl
 
 <img width="224" height="244" alt="image" src="https://github.com/user-attachments/assets/0a92ea37-2f09-49db-a4f3-4067f4ce6b56" />
 
-***Explanation***
+***What I have done***
+1. A regular expression identifies exactly the corrupted values. The pattern __^[0-9]{1,2}\.(sty|lut|...|gru)$__ matches the whole string in the form “day.Polish month abbreviation”. The anchors __^...$__ prevent partial matches, the escaped dot (\.) is read as a literal dot, and {1,2} covers days written with one or two digits. The profiling query that searched for every value not shaped like a number returned only these 8 values, and all of them match this pattern, so the rule covers the whole problem and nothing else.
+
+2. CASE makes the conversion safe. A direct CAST of the whole column would fail on the first value such as 24.sie. Because CASE evaluates the cast only in the branch for values that did not match the date pattern, the view works for all other records.
+
+3. NUMERIC is the right target type for prices. Revenue is calculated as quantity × unit_price, which needs a number, not text. NUMERIC stores values exactly, whereas floating-point types can introduce rounding errors in monetary calculations.
+
+4. Corrupted prices are set to NULL, not guessed. A value like 24.sie could originally have been 24.8 or 24.08, and a price feeds straight into revenue, so any guess would add an error to the results. NULL is also not replaced with 0, because zero-priced records exist in the data as a separate group (potential freebies), and mixing the two would blur that distinction.
+
+5. The records are flagged, not deleted. Only the price is invalid in these rows. Their quantity, country, date and status are still correct, so they remain available for non-price analysis, and only price-related calculations exclude them.
+
+6. The __flag__ documents the reason. unit_price_flag (DATE_FLAG or OK) explains why a price is missing, so a NULL in unit_price_clean cannot be confused with a missing value from the source, and it shows exactly how many records were affected.
 
 
 ### RECOVERY PROCESS - discount_pct
 
 <img width="862" height="721" alt="image" src="https://github.com/user-attachments/assets/166ba157-e352-4614-b5da-a0f8b01cc747" />
 
-Problem
+***Problem:***
 The discount_pct column was stored as text and contained several data quality issues. Profiling showed five types of values:
-- correctly stored numbers (e.g. 0.0, 13.84): 44.70%,
-- numbers with a % symbol (e.g. 10%): 0.41%,
-- values resembling dates with Polish month abbreviations (e.g. lip.41, 01.cze): 42.88%,
-- missing values (NULL): 12.01%.
+- correctly stored __numbers__ e.g. 0.0, 13.84: __44.70%__,
+- numbers with __a % symbol__ e.g. 10%: __0.41%__,
+- values __resembling dates__ with Polish month abbreviations e.g. lip.41, 01.cze: __42.88%__,
+- missing values __NULL: 12.01%__.
 
-Altogether, only 45.10% of the values were stored as numbers.
+Altogether, only __45.10%__ of the values were stored as numbers.
 
 Root cause
 The source file had been opened and saved in Excel with Polish regional settings, where a dot is read as a date separator. Discounts such as 7.41 were converted to dates (displayed as lip.41), and values such as 1.6 to 01.cze. A simulation of this conversion on the original file reproduced the observed shares (42.96% vs 42.88% in the database), which confirms the explanation.
@@ -510,26 +521,22 @@ CREATE OR REPLACE VIEW discount_cl AS
 SELECT *,
     ROUND(
         CASE
-            WHEN discount_pct IS NULL OR TRIM(discount_pct) = ''                   THEN NULL
-            WHEN discount_pct ~ '^[0-9]+(\.[0-9]+)?$'                              THEN discount_pct::numeric
-            WHEN discount_pct ~ '^[0-9]+(\.[0-9]+)?%$'                             THEN REPLACE(discount_pct, '%', '')::numeric
-            WHEN discount_pct ~ '^(sty|lut|mar|kwi|maj|cze|lip|sie|wrz|paź|lis|gru)\.[0-9]{2}$'
-                 THEN ARRAY_POSITION(
+            WHEN discount_pct IS NULL OR TRIM(discount_pct) = '' THEN NULL
+            WHEN discount_pct ~ '^[0-9]+(\.[0-9]+)?$' THEN discount_pct::numeric
+            WHEN discount_pct ~ '^[0-9]+(\.[0-9]+)?%$' THEN REPLACE(discount_pct, '%', '')::numeric
+            WHEN discount_pct ~ '^(sty|lut|mar|kwi|maj|cze|lip|sie|wrz|paź|lis|gru)\.[0-9]{2}$' THEN ARRAY_POSITION(
                           ARRAY['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź','lis','gru'],
                           SPLIT_PART(discount_pct, '.', 1))
                       + SPLIT_PART(discount_pct, '.', 2)::numeric / 100
             ELSE NULL
         END,
     2) AS discount_pct_clean,
-
     CASE
-        WHEN discount_pct IS NULL OR TRIM(discount_pct) = ''                       THEN 'MISSING'
-        WHEN discount_pct ~ '^[0-9]+(\.[0-9]+)?$'                                  THEN 'OK'
-        WHEN discount_pct ~ '^[0-9]+(\.[0-9]+)?%$'                                 THEN 'PERCENT_CONVERTED'
-        WHEN discount_pct ~ '^(sty|lut|mar|kwi|maj|cze|lip|sie|wrz|paź|lis|gru)\.[0-9]{2}$'
-                                                                                   THEN 'RECOVERED_MONTH_YEAR'
-        WHEN discount_pct ~ '^[0-9]{2}\.(sty|lut|mar|kwi|maj|cze|lip|sie|wrz|paź|lis|gru)$'
-                                                                                   THEN 'AMBIGUOUS_DAY_MONTH'
+        WHEN discount_pct IS NULL OR TRIM(discount_pct) = '' THEN 'MISSING'
+        WHEN discount_pct ~ '^[0-9]+(\.[0-9]+)?$' THEN 'OK'
+        WHEN discount_pct ~ '^[0-9]+(\.[0-9]+)?%$' THEN 'PERCENT_CONVERTED'
+        WHEN discount_pct ~ '^(sty|lut|mar|kwi|maj|cze|lip|sie|wrz|paź|lis|gru)\.[0-9]{2}$' THEN 'RECOVERED_MONTH_YEAR'
+        WHEN discount_pct ~ '^[0-9]{2}\.(sty|lut|mar|kwi|maj|cze|lip|sie|wrz|paź|lis|gru)$' THEN 'AMBIGUOUS_DAY_MONTH'
         ELSE 'OTHER_INVALID'
     END AS discount_pct_flag
 FROM unit_price_cl;
@@ -542,9 +549,23 @@ FROM unit_price_cl;
 
 <img width="684" height="158" alt="image" src="https://github.com/user-attachments/assets/18d21cf1-f87d-4532-bee8-8b21701d3a9e" />
 
+***What I have done:***
+1. __CASE__ handles each type of value with its own rule.The conditions are checked in a fixed order, and only the result expression of the matching branch is evaluated. A text value is therefore cast to numeric only after it has passed the matching pattern, so invalid values cannot break the view. Anything unexpected falls into ELSE and is not silently converted.
 
-<h2 align="center">The data has been cleaned and is ready for analysis. The sample below shows what it looks like after cleaning.</h2>
+2. Anchored regular expressions __(^...$)__ validate the whole string. Matching the entire value, not just a part of it, prevents false positives e.g. a string containing a number plus other characters. Escaping the dot (\.) ensures it is read as a literal dot, not as any character.
 
+3. __REPLACE__, __ARRAY_POSITION__ and __SPLIT_PART__ recover what can be recovered exactly. Excel reads a value such as 7.41 as July 1941 and displays it as lip.41. Splitting the text at the dot SPLIT_PART, turning the Polish month abbreviation back into its number ARRAY_POSITION and adding the year part divided by 100 restores the original 7.41 without guessing. Values with a % sign are converted by removing the symbol REPLACE. This raised the share of usable discounts from 45.10% to 73.25% of records.
+
+4. Values that cannot be recovered reliably are not guessed. A value like 01.cze could be 1.6 or 1.06, so it is set to NULL and flagged as AMBIGUOUS_DAY_MONTH instead of being replaced with an arbitrary number. Blanks are also kept as NULL and not replaced with 0, because a missing discount may mean either “no discount” or “not recorded”, and assuming 0 could overstate revenue.
+
+5. __ROUND(..., 2)__ gives the column a consistent precision. Discounts are expressed with two decimal places, so rounding keeps the recovered values month + year/100 in the same format as the original ones and avoids inconsistencies in comparisons and aggregations. ROUND on a numeric value keeps the column type unchanged, which allows the view to be replaced without breaking dependent views.
+
+6. The __flag__ column documents every decision. discount_pct_flag is built with the same conditions, in the same order, as discount_pct_clean, so the value and its explanation always match. It separates missing values MISSING from recovered RECOVERED_MONTH_YEAR, ambiguous AMBIGUOUS_DAY_MONTH, converted PERCENT_CONVERTED and invalid OTHER_INVALID ones. This makes it possible to analyse each group separately and to report how reliable the discount data is.
+
+***To sum up***
+Why not a simpler approach? Casting the column directly would raise an error on the first invalid value. Replacing all problematic values with 0 would hide the problem and overstate revenue, and deleting the rows would remove valid orders from the analysis. The chosen approach keeps every record, recovers the values that can be recovered exactly, and clearly marks the rest.
+
+### The data has been cleaned and is ready for analysis.
 
 <img width="1164" height="548" alt="image" src="https://github.com/user-attachments/assets/47993d2a-68b0-4215-99a8-3b538fb08eca" />
 
@@ -561,7 +582,7 @@ Expected outcome: improved data quality, more reliable reporting, reduced manual
 
 ### Take-Home messages
 
-1. Dirty data distorts results silently. Duplicates, inconsistent labels and placeholder values (e.g. quantity = 608, 0.6% of records but 53.6% of units sold) would have inflated totals and averages if they had not been found and handled.
+1. Dirty data distorts results silently. Duplicates, inconsistent labels and placeholder values e.g. quantity = 608, 0.6% of records but 53.6% of units sold would have inflated totals and averages if they had not been found and handled.
 
 2. Flagging beats deleting. Cleaning in SQL views kept the raw data intact, and flags make every exclusion visible, auditable and reversible.
 
