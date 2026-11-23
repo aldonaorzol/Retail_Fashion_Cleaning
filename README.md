@@ -266,8 +266,8 @@ FROM dedup_orders;
 ***Explanation of the Solution:***
 - __CASE__ expressions were used to identify supported date formats and apply the appropriate conversion rule.
 - Values in the DD.MM.YYYY format are converted directly to the SQL DATE type using __TO_DATE()__.
-- Partial dates stored as YYYY-MM are converted by assigning the first day of the month (YYYY-MM-01) and flagged as approximate.
-- Records that do not match either supported format are converted to NULL, preventing invalid values from affecting time-based analyses.
+- Partial dates stored as YYYY-MM are converted by assigning the first day of the month __(YYYY-MM-01)__ and flagged as approximate.
+- Records that do not match either supported format are converted to __NULL__, preventing invalid values from affecting time-based analyses.
 - The order_date_flag column identifies records containing the not_a_date placeholder, while is_date_approximate distinguishes month-level dates from exact dates.
 
 After:
@@ -277,7 +277,7 @@ After:
 ### DATA STANDARDIZATION - country
 
 ***Problem:***
-The country column contained multiple representations of the same country, including abbreviations, alternative country names, local-language names, and inconsistent formatting. For example, Germany appeared as DE, GER, Germany, and Deutschland, while Poland appeared as PL, POL, Poland, and Polska.
+The country column contained multiple representations of the same country, including abbreviations, alternative country names, local-language names, and inconsistent formatting. For example, Germany appeared as __DE, GER, Germany, and Deutschland__, while Poland appeared as __PL, POL, Poland, and Polska__.
 
 As a result, grouping or aggregating data by country would produce fragmented results, where one country could be counted as several separate categories. To improve data quality and ensure accurate analysis, the country values had to be normalized into a unified format.
 
@@ -316,7 +316,7 @@ After:
 
 1. Country names were standardized using the __CASE__ statement, which allows multiple variants of the same country name to be mapped to a single, consistent value. This approach is transparent, easy to maintain, and simple to extend with additional mappings when needed, without modifying the source data.
 
-2. The __UPPER()__ function was used to eliminate inconsistencies related to letter casing. As a result, values such as "Germany", "GERMANY", and "germany" are treated as the same country.
+2. The __UPPER()__ function was used to eliminate inconsistencies related to letter casing. As a result, values such as Germany, GERMANY, and "germany" are treated as the same country.
 
 3. The __TRIM()__ function removes leading and trailing spaces from text values. This prevents entries such as "Poland " or " Germany" from being interpreted as separate and distinct records.
 
@@ -326,7 +326,7 @@ After:
 
 ***Problem:***
 
-The status column lacked standardization and contained multiple textual representations of the same business process stage. Equivalent statuses were stored under different values, including abbreviations (SHIP), alternative forms (SHIPPED), and synonymous completion statuses (DONE, COMPLETE, COMPLETED). The data also contained formatting inconsistencies such as different letter casing and potential leading or trailing spaces.
+The status column lacked standardization and contained multiple textual representations of the same business process stage. Equivalent statuses were stored under different values, including abbreviations __SHIP__, alternative forms __SHIPPED__, and synonymous completion statuses __DONE, COMPLETE, COMPLETED__. The data also contained formatting inconsistencies such as different letter casing and potential leading or trailing spaces.
 
 Without standardization, aggregations based on order status would produce duplicated categories and distorted analytical results. Therefore, a data-cleaning step was required to normalize status values into a consistent and analysis-ready format.
 
@@ -355,9 +355,9 @@ After:
 
 ***Explanation of the Solution:***
 
-1. The __CASE__ statement was used to standardize the values in the status column. As a result, different variants representing the same order status, such as "SHIP" and "SHIPPED" or "DONE", "COMPLETE", and "COMPLETED", are mapped to a single, __consistent category__. Standardizing status values improves data quality and ensures more reliable analysis and reporting.
+1. The __CASE__ statement was used to standardize the values in the status column. As a result, different variants representing the same order status, such as SHIP and SHIPPED or DONE, COMPLETE, and COMPLETED, are mapped to a single, __consistent category__. Standardizing status values improves data quality and ensures more reliable analysis and reporting.
 
-2. The __UPPER()__ function eliminates inconsistencies caused by differences in letter casing, ensuring that values such as "shipped", "Shipped", and "SHIPPED" are treated identically.
+2. The __UPPER()__ function eliminates inconsistencies caused by differences in letter casing, ensuring that values such as shipped, Shipped, and SHIPPED are treated identically.
 
 3. The __TRIM()__ function removes leading and trailing spaces from text values, preventing entries such as "SHIPPED " or " COMPLETED" from being incorrectly interpreted as separate statuses.
 
@@ -446,7 +446,7 @@ After:
 
 2. The expression __quantity::int = 608__ creates the is_quantity_anomaly flag. This value was classified as anomalous because it is far outside the normal distribution of sales quantities, where almost all orders contain between 1 and 13 units.
 
-3. Boolean flags (TRUE/FALSE) were used instead of deleting records or replacing values. This makes the cleaning process fully transparent, reversible, and auditable, allowing future analysts to review or reconsider the assumptions behind the treatment of these observations.
+3. Boolean flags TRUE/FALSE were used instead of deleting records or replacing values. This makes the cleaning process fully transparent, reversible, and auditable, allowing future analysts to review or reconsider the assumptions behind the treatment of these observations.
 
 4. Separating anomaly detection from anomaly removal follows a common data-quality practice. The view identifies records that may require special treatment, while the final analytical dataset can decide whether to include or exclude them depending on the business objective.
 
@@ -459,9 +459,9 @@ Both groups of records are handled consistently: they are identified, documented
 ### QUALITY VALIDATION - unit_price
 
 ***Problem:***
-- 8 records contained date values such as 28.mar and 26.kwi instead of numeric prices. These values resulted from an Excel conversion error and could not be reliably restored to their original numbers.
+- __8 records__ contained date values such as __28.mar and 26.kwi__ instead of numeric prices. These values resulted from an Excel conversion error and could not be reliably restored to their original numbers.
   
-- 1,608 records had a price equal to 0. Unlike the date values, zero-priced transactions may represent valid business events e.g., freebies or promotions and therefore could not be automatically classified as errors.
+- __1,608 records__ had a price equal to __0__. Unlike the date values, zero-priced transactions may represent valid business events e.g., freebies or promotions and therefore could not be automatically classified as errors.
 
 Before analysis, it was necessary to distinguish between corrupted price values and potentially valid zero-priced transactions to prevent distortions in revenue and price-based metrics while preserving data transparency.
 
@@ -524,13 +524,13 @@ FROM quantity_fl
 ***Explanation of the Solution:***
 1. A regular expression identifies exactly the corrupted values. The pattern __^[0-9]{1,2}\.(sty|lut|...|gru)$__ matches the whole string in the form “day.Polish month abbreviation”. The anchors __^...$__ prevent partial matches, the escaped dot (\.) is read as a literal dot, and {1,2} covers days written with one or two digits. The profiling query that searched for every value not shaped like a number returned only these 8 values, and all of them match this pattern, so the rule covers the whole problem and nothing else.
 
-2. CASE makes the conversion safe. A direct CAST of the whole column would fail on the first value such as 24.sie. Because CASE evaluates the cast only in the branch for values that did not match the date pattern, the view works for all other records.
+2. __CASE__ makes the conversion safe. A direct __CAST__ of the whole column would fail on the first value such as 24.sie. Because CASE evaluates the cast only in the branch for values that did not match the date pattern, the view works for all other records.
 
-3. NUMERIC is the right target type for prices. Revenue is calculated as quantity × unit_price, which needs a number, not text. NUMERIC stores values exactly, whereas floating-point types can introduce rounding errors in monetary calculations.
+3. __NUMERIC__ is the right target type for prices. Revenue is calculated as quantity × unit_price, which needs a number, not text. NUMERIC stores values exactly, whereas floating-point types can introduce rounding errors in monetary calculations.
 
-4. Corrupted prices are set to NULL, not guessed. A value like 24.sie could originally have been 24.8 or 24.08, and a price feeds straight into revenue, so any guess would add an error to the results. NULL is also not replaced with 0, because zero-priced records exist in the data as a separate group (potential freebies), and mixing the two would blur that distinction.
+4. Corrupted prices are set to __NULL__, not guessed. A value like 24.sie could originally have been 24.8 or 24.08, and a price feeds straight into revenue, so any guess would add an error to the results. NULL is also not replaced with 0, because zero-priced records exist in the data as a separate group (potential freebies), and mixing the two would blur that distinction.
 
-5. The records are flagged, not deleted. Only the price is invalid in these rows. Their quantity, country, date and status are still correct, so they remain available for non-price analysis, and only price-related calculations exclude them.
+5. The records are __flagged__, not deleted. Only the price is invalid in these rows. Their quantity, country, date and status are still correct, so they remain available for non-price analysis, and only price-related calculations exclude them.
 
 6. The __flag__ documents the reason. unit_price_flag (DATE_FLAG or OK) explains why a price is missing, so a NULL in unit_price_clean cannot be confused with a missing value from the source, and it shows exactly how many records were affected.
 
