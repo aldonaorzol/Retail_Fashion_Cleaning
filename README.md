@@ -1,7 +1,7 @@
  <h1 align="center">Retail_Fashion_Cleaning</h1>
 
 ### Data analysis:
-This notebook covers the first phase of the Retail_Fashion project: data cleaning and preparation. The analysis itself continues in the second part, available at the link: https://github.com/aldonaorzol/Retail_Fashion_Analysis
+This notebook covers the first phase of __the Retail_Fashion project__: data cleaning and preparation. The analysis itself continues in the second part, available at the link: https://github.com/aldonaorzol/Retail_Fashion_Analysis
 
 
 ### Tools: 
@@ -13,7 +13,7 @@ The source data contained numerous data quality issues, including __inconsistent
 
 ### Purpose:
 
-The goal of Retail_Fashion_Cleaning is to prepare the data for analysis by recovering as many records as possible while keeping every transformation accurate and traceable.
+The goal of __Retail_Fashion_Cleaning__ is to prepare the data for analysis by recovering as many records as possible while keeping every transformation accurate and traceable.
 
 ### Data Structure:
 
@@ -55,10 +55,10 @@ FROM sales_orders;
 
 #### Insights:
 The per-column check of sales_orders (260,780 records) confirms that the record count is correct. It also shows that missing values are concentrated in two columns:
--discount_pct: 31,322 NULLs (about __12.0%__ of rows)
--order_date: 629 NULLs (about __0.24%__ of rows)
+-discount_pct: __31,322 NULLs about 12.0% of rows__
+-order_date: __629 NULLs about 0.24% of rows__
 
-I also noticed formats dd.mm.yyyy, yyyy.mm, yyyy.mm.dd, non-existent dates like 2024-13-40, and not_a_date values in the order_date column. 
+I also noticed formats __dd.mm.yyyy, yyyy.mm, yyyy.mm.dd__, non-existent dates like __2024-13-40__, and __not_a_date values__ in the order_date column. 
 
 <img width="319" height="68" alt="image" src="https://github.com/user-attachments/assets/756b6f26-d81d-4fa0-affb-77a8b5820ecc" />
 
@@ -77,7 +77,7 @@ FROM sales_orders;
 1. __discount_pct (12.0% missing)__ missing discount is ambiguous. It may mean no discount was applied or the value was not recorded. These two cases have different consequences for revenue calculations, so the interpretation must be verified before choosing a treatment, such as assuming 0% or flagging the rows. Replacing blanks with 0 without evidence could overstate revenue.
 2. __order_date (629 missing)__ the share is small, but the date is essential for time-based analysis (trends, seasonality, year-over-year comparisons). Rows without a date cannot be assigned to a period and would silently drop out of time-based aggregations. They should be flagged and, if the date cannot be recovered, excluded from time-series analysis, while still being counted in totals where appropriate.
 3. Complete key and analytical columns. order_id, product_id and customer_id have no gaps, so JOIN operations and duplicate detection are not compromised by missing keys.
-4. NULLs are counted here after PostgreSQL converted blank fields during import. In addition to the 629 NULLs, the column contains the text placeholder not_a_date in 661 records (0.25% of all rows). Together, this gives __1,290 rows (about 0.49%)__ with no usable date. The column also contains dates in invalid formats or with non-existent values, such as 2024-13-40. Because order_date is essential for time-based analysis, these issues are addressed during standardization.
+4. NULLs are counted here after PostgreSQL converted blank fields during import. In addition to the 629 NULLs, the column contains the text placeholder not_a_date in 661 records 0.25% of all rows. Together, this gives __1,290 rows about 0.49%__ with no usable date. The column also contains dates in invalid formats or with non-existent values, such as 2024-13-40. Because order_date is essential for time-based analysis, these issues are addressed during standardization.
 
 ## Products:
 ```
@@ -94,17 +94,17 @@ FROM products;
 <img width="783" height="78" alt="image" src="https://github.com/user-attachments/assets/155236b4-59b0-46ed-8a3c-57089674ffdb" />
 
 #### Insights: 
-The per-column check of products (2,500 records) confirms that the record count is correct. It also shows that missing values occur in only one column:
-- launch_date: __91 NULLs (about 3.6% of rows)__
-All other columns (product_id, category, sub_category, base_price) contain no NULLs.
+The per-column check of products 2,500 records confirms that the record count is correct. It also shows that missing values occur in only one column:
+- launch_date: __91 NULLs about 3.6% of rows__
+All other columns product_id, category, sub_category, base_price contain no NULLs.
 
 <img width="449" height="735" alt="image" src="https://github.com/user-attachments/assets/23dddca6-e5e8-4032-9257-20fe4403bb02" />
 
 #### Explanations:
 
-1.Complete key and analytical columns. product_id has no gaps, so JOIN operations with sales_orders and inventory are not compromised.
+1.Complete key and analytical columns, product_id has no gaps, so JOIN operations with sales_orders and inventory are not compromised.
 
-2. launch_date (91 missing). The missing values are documented, but __they do not affect this project: the column is not used in the analysis,__ so the affected rows are retained and no imputation or removal is required. Should the scope change in the future (e.g. analyzing product age or the effect of new launches on sales), these records would need to be reviewed, as they could not be included in such analysis.
+2. launch_date has 91 missing values that are documented, but __they do not affect this project: the column is not used in the analysis,__ so the affected rows are retained and no imputation or removal is required.  These records would need to be reviewed, as they could not be included in analyses such as product age or the effect of new launches on sales.
 
 ## Inventory:
 
@@ -121,24 +121,24 @@ FROM inventory;
 <img width="771" height="74" alt="image" src="https://github.com/user-attachments/assets/82c45176-0db4-47fe-827b-116f5d79fa5b" />
 
 #### Insights:
-The per-column check of inventory (3,741 records) confirms that the record count is correct. It also shows that NULLs occur in only one column last_stock_update __6 NULLs (about 0.16% of rows)__
+The per-column check of inventory 3,741 records confirms that the record count is correct. It also shows that NULLs occur in only one column last_stock_update __6 NULLs about 0.16% of rows__
 
-All other columns (product_id, warehouse_country, stock_quantity) contain no NULLs. Inspection of the source file additionally revealed that last_stock_update contains invalid entries that a NULL check does not detect: the text placeholder not_a_date, a non-existent date __(2024-13-40, month 13 and day 40),__ and partial dates without a day __(e.g. 2023-06, 2023-10, 2024-04, 2024-05, 2024-07, 2024-11).__ The same pattern was found in products.launch_date.
+All other columns product_id, warehouse_country, stock_quantit contain no NULLs. Inspection of the source file additionally revealed that last_stock_update contains invalid entries that a NULL check does not detect: the text placeholder not_a_date, a non-existent date 2024-13-40, month 13 and day 40, and partial dates without a day e.g. 2023-06, 2023-10, 2024-04, 2024-05, 2024-07, 2024-11. The same pattern was found in products.launch_date.
 
-Check whether the `product_id` field contains duplicate values. If it does not, there is no need to filter the data based on the date of the last inventory update, and the `last_stock_update` column can be omitted.
+Check whether the product_id field contains duplicate values. If it does not, there is no need to filter the data based on the date of the last inventory update, and the last_stock_update column can be omitted.
 
 #### Explanations:
-1. Complete key and analytical columns. product_id and warehouse_country have no gaps, so the composite key (product_id + warehouse_country), already confirmed as unique, is fully populated and JOIN operations with products are not compromised. stock_quantity is also complete, so stock levels are available for every record.
-2. last_stock_update is not only missing, but also inconsistent. Besides 6 NULLs, the column contains the placeholder not_a_date, an invalid date and partial dates (year and month only). A NULL-only check therefore understates the scale of the problem: the number of unusable dates is higher than 6.
-3. Impact on the project. last_stock_update will be used in the analysis (e.g. to assess how current the inventory data is), so these records cannot be ignored. Rows with not_a_date, NULL or a non-existent date have no usable update date and will be converted to NULL and flagged. Partial dates (year and month) need an explicit rule: either keep them at month-level precision or set them to the first day of the month, with the decision documented. Dates will be parsed into a proper DATE type and checked against the expected range.
+1. product_id and warehouse_country have no gaps, so the composite key (product_id + warehouse_country), already confirmed as unique, is fully populated and JOIN operations with products are not compromised. stock_quantity is also complete, so stock levels are available for every record.
+2. last_stock_update is not only missing, but also inconsistent. Besides 6 NULLs, the column contains the placeholder not_a_date, an invalid date, and partial dates (year and month only). A NULL-only check therefore understates the scale of the problem: the number of unusable dates is higher than 6.
+3. Impact on the project. last_stock_update will be used in the analysis e.g. to assess how current the inventory data is, so these records cannot be ignored. Rows with not_a_date, NULL or a non-existent date have no usable update date and will be converted to NULL and flagged. Partial dates year and month need an explicit rule: either keep them at month-level precision or set them to the first day of the month, with the decision documented. Dates will be parsed into a proper DATE type and checked against the expected range.
 
 ### Duplicated records
 
 <img width="601" height="389" alt="image" src="https://github.com/user-attachments/assets/b58700ad-133a-4db1-ad39-1b2d75f8759d" />
 
 #### Insights:
-I check compared the number of rows with the number of distinct key values in each table:
-- sales_orders: 260,780 rows vs. 260,000 distinct order_id values, so __780 surplus rows (about 0.30% of the table).__
+I checked and compared the number of rows with the number of distinct key values in each table:
+- sales_orders: 260,780 rows vs. 260,000 distinct order_id values, so __780 surplus rows about 0.30% of the table__.
 - products: 2,500 rows and 2,500 distinct product_id values, so the key is unique and no duplicates exist.
 - inventory: __3,741 rows vs. 2,500__ distinct product_id values.
 
@@ -154,10 +154,10 @@ The results confirm that 780 order_id values appear twice. A comparison across a
 The results show that the inventory table does not require deduplication, as the same product may appear in more than one warehouse.
 
 #### Explanations:
-1. product_id is the primary key in the catalog. It must be unique, so any repeated value would be an error (e.g. a doubled import or a merge of several sources). Duplicates in products would multiply rows in every JOIN with sales_orders and inventory, inflating revenue, quantities and all KPIs built on them. This was not the case here.
-2. A repeated order_id is not automatically an error. If the table is at order-line level, one order can legitimately contain several products. Before removing anything, it was necessary to check whether the repeated rows are full duplicates (identical in all columns) or different line items / conflicting versions of the same order.
-3. The two cases require different treatment. Full duplicates can be safely removed (keeping one record). Rows sharing a key but differing in values need a rule for choosing the correct version, such as the most recent record, or manual review.
-4. In inventory, a repeated product_id is expected. The correct uniqueness check is the composite key (product_id + warehouse_country), which passed.
+1. product_id is the primary key in the catalog. It must be unique, so any repeated value would be an error e.g. a doubled import or a merge of several sources. Duplicates in products would multiply rows in every JOIN with sales_orders and inventory, inflating revenue, quantities and all KPIs built on them. This was not the case here.
+2. A repeated order_id is not automatically an error. If the table is at order-line level, one order can legitimately contain several products. Before removing anything, it was necessary to check whether the repeated rows are full duplicates identical in all columns or different line items / conflicting versions of the same order.
+3. The two cases require different treatment. Full duplicates can be safely removed keeping one record. Rows sharing a key but differing in values need a rule for choosing the correct version, such as the most recent record, or manual review.
+4. In inventory, a repeated product_id is expected. The correct uniqueness check is the composite key product_id + warehouse_country, which passed.
 5. Why it matters for the analysis. Duplicates inflate totals and counts, distort averages and shares, and break the one-to-many relationship between products and sales_orders.
 6. The product_id field contains no duplicate values; therefore, there is no need to filter the data following the most recent update of stock levels. So I decided to omit the column last_stock_update in my analysis.
   
@@ -174,9 +174,9 @@ Unstandardized data does not cause errors; it silently distorts results. My quer
 
 
 #### Explanations:
-1. Why standardization is necessary. The country column stores the same country in several forms: different letter case __(France, france),__ full names versus codes __(France, FR),__ non-standard codes __(GER instead of DE)__ and colloquial names __(Holland instead of Netherlands).__ SQL treats each of these as a distinct value, so grouping, filtering and counting operate on the spelling rather than on the actual country.
+1. Why standardization is necessary. The country column stores the same country in several forms: different letter case __France, france__, full names versus codes __France, FR__, non-standard codes __GER instead of DE__ and colloquial names __Holland instead of Netherlands__. SQL treats each of these as a distinct value, so grouping, filtering and counting operate on the spelling rather than on the actual country.
 
-2. Status values. The values __(Done, Complete and Completed)__ have the same meaning and should be mapped to a single value. The same applies to __(Ship and Shipped)__.
+2. Status values. The values __Done, Complete and Completed__ have the same meaning and should be mapped to a single value. The same applies to __Ship and Shipped__.
 
 3. Why unambiguous values matter. Unambiguous values are important because I will be analyzing sales by country. The order status determines whether an order was actually fulfilled, generated revenue for the company and should be included in the sales results. Inconsistent status values would cause part of the real sales to be excluded or misclassified, which would distort the results for each country.
 
@@ -218,16 +218,17 @@ After:
 
 ***Why this query is appropriate:***
 
-1. Cannot filter by `ROW_NUMBER()` in the same `SELECT` statement, because window functions are evaluated after the `WHERE` clause. A CTE allows to calculate the number first and then filter by it.
-2. ROW_NUMBER() assigns each row a sequential number within its group. It takes no arguments, because the numbering does not depend on the values of the records.
-3. OVER (...) indicates that this is a window function: it is calculated for each row separately, based on a “window” of related rows, rather than collapsing the rows into one.
-4. PARTITION BY order_id splits the rows into groups that share the same order_id.
-5. ORDER BY ... sets the order of rows within a group. The row that comes first in that order gets number 1.
+1. Cannot filter by ROW_NUMBER() in the same SELECT statement, because window functions are evaluated after the WHERE clause. A __CTE__ allows to calculate the number first and then filter by it.
+2. __ROW_NUMBER()__ assigns each row a sequential number within its group. It takes no arguments, because the numbering does not depend on the values of the records.
+3. __OVER (...)__ indicates that this is a window function: it is calculated for each row separately, based on a “window” of related rows, rather than collapsing the rows into one.
+4. __PARTITION BY__ order_id splits the rows into groups that share the same order_id.
+5. __ORDER BY ...__ sets the order of rows within a group. The row that comes first in that order gets number 1.
 
 ### DATE FORMAT STANDARDIZATION - order_date 
 
 ***Problem:***
-order_date was stored as text. 99.01% of records (257,414) were in the DD.MM.YYYY format and 0.27% (694) were partial dates in the YYYY-MM format. The remaining 0.73% (1,892 of 260,000 records) had no usable date: 629 NULLs, 660 not_a_date placeholders and 603 non-existent dates (e.g. 2024-13-40).
+order_date was stored as text. 99.01% of records 257,414 were in the DD.MM.YYYY format and __0.27% 694 values__ were partial dates in the __YYYY-MM format__. 
+The remaining __0.73% 1,892__ of 260,000 records had __no usable date__: 629 NULLs, 660 not_a_date placeholders and 603 non-existent dates e.g. 2024-13-40.
 
 <img width="394" height="170" alt="image" src="https://github.com/user-attachments/assets/b3bb7774-8851-4087-a5b0-585db9cf1445" />
 
