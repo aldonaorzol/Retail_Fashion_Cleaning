@@ -104,7 +104,7 @@ All other columns product_id, category, sub_category, base_price contain no NULL
 
 1.Complete key and analytical columns, product_id has no gaps, so JOIN operations with sales_orders and inventory are not compromised.
 
-2. launch_date has 91 missing values that are documented, but __they do not affect this project: the column is not used in the analysis,__ so the affected rows are retained and no imputation or removal is required.  These records would need to be reviewed, as they could not be included in analyses such as product age or the effect of new launches on sales.
+2. launch_date has 91 missing values that are documented, but __they do not affect this project the column is not used in the analysis__, so the affected rows are retained and no imputation or removal is required.  These records would need to be reviewed, as they could not be included in analyses such as product age or the effect of new launches on sales.
 
 ## Inventory:
 
@@ -128,9 +128,8 @@ All other columns product_id, warehouse_country, stock_quantit contain no NULLs.
 Check whether the product_id field contains duplicate values. If it does not, there is no need to filter the data based on the date of the last inventory update, and the last_stock_update column can be omitted.
 
 #### Explanations:
-1. product_id and warehouse_country have no gaps, so the composite key (product_id + warehouse_country), already confirmed as unique, is fully populated and JOIN operations with products are not compromised. stock_quantity is also complete, so stock levels are available for every record.
-2. last_stock_update is not only missing, but also inconsistent. Besides 6 NULLs, the column contains the placeholder not_a_date, an invalid date, and partial dates (year and month only). A NULL-only check therefore understates the scale of the problem: the number of unusable dates is higher than 6.
-3. Impact on the project. last_stock_update will be used in the analysis e.g. to assess how current the inventory data is, so these records cannot be ignored. Rows with not_a_date, NULL or a non-existent date have no usable update date and will be converted to NULL and flagged. Partial dates year and month need an explicit rule: either keep them at month-level precision or set them to the first day of the month, with the decision documented. Dates will be parsed into a proper DATE type and checked against the expected range.
+1. product_id and warehouse_country have no gaps, so the composite key __product_id + warehouse_country__, already confirmed as __unique__, is fully populated and JOIN operations with products are not compromised. stock_quantity is also complete, so stock levels are available for every record.
+2. __last_stock_update__ is not only missing, but also inconsistent. Besides 6 NULLs, the column contains the placeholder not_a_date, an invalid date, and partial dates (year and month only). A NULL-only check therefore understates the scale of the problem: __the number of unusable dates is higher than 6__.
 
 ### Duplicated records
 
@@ -154,9 +153,9 @@ The results confirm that 780 order_id values appear twice. A comparison across a
 The results show that the inventory table does not require deduplication, as the same product may appear in more than one warehouse.
 
 #### Explanations:
-1. product_id is the primary key in the catalog. It must be unique, so any repeated value would be an error e.g. a doubled import or a merge of several sources. Duplicates in products would multiply rows in every JOIN with sales_orders and inventory, inflating revenue, quantities and all KPIs built on them. This was not the case here.
+1. product_id is __the primary key__ in the catalog. It must be unique, so any repeated value would be an error e.g. a doubled import or a merge of several sources. Duplicates in products would multiply rows in every JOIN with sales_orders and inventory, inflating revenue, quantities and all KPIs built on them. This was not the case here.
 2. A repeated order_id is not automatically an error. If the table is at order-line level, one order can legitimately contain several products. Before removing anything, it was necessary to check whether the repeated rows are full duplicates identical in all columns or different line items / conflicting versions of the same order.
-3. The two cases require different treatment. Full duplicates can be safely removed keeping one record. Rows sharing a key but differing in values need a rule for choosing the correct version, such as the most recent record, or manual review.
+3. __The two cases require different treatment__. Full duplicates can be safely removed keeping one record. Rows sharing a key but differing in values need a rule for choosing the correct version, such as the most recent record, or manual review.
 4. In inventory, a repeated product_id is expected. The correct uniqueness check is the composite key product_id + warehouse_country, which passed.
 5. Why it matters for the analysis. Duplicates inflate totals and counts, distort averages and shares, and break the one-to-many relationship between products and sales_orders.
 6. The product_id field contains no duplicate values; therefore, there is no need to filter the data following the most recent update of stock levels. So I decided to omit the column last_stock_update in my analysis.
@@ -284,16 +283,16 @@ FROM t;
 ```
 
 Why I used these functions:
-- CTE, because it splits the cleaning into clear, named steps (trimming blank values, classifying the format, then converting to DATE) instead of nesting subqueries. The status is calculated once and reused for the conversion.
-- CASE, because each format needs its own rule. The checks run in a defined order, and a value is converted with TO_DATE only after it passes both the format check and the calendar check, so invalid values cannot break the view.
-- Flags, because replacing a value with NULL without explanation would hide what happened to the record. order_date_status, order_date_issue and is_date_approximate show how each date was interpreted, so the cleaning is transparent and can be audited.
+- __CTE__ because it splits the cleaning into clear, named steps trimming blank values, classifying the format, then converting to DATE instead of nesting subqueries. The status is calculated once and reused for the conversion.
+- __CASE__ because each format needs its own rule. The checks run in a defined order, and a value is converted with TO_DATE only after it passes both the format check and the calendar check, so invalid values cannot break the view.
+- __Flags__ because replacing a value with NULL without explanation would hide what happened to the record. order_date_status, order_date_issue and is_date_approximate show how each date was interpreted, so the cleaning is transparent and can be audited.
 
 What I have done:
-1. I standardized order_date in a view built on CTEs. Blank values are treated as NULL, and each text value is classified with a strict regular expression that checks the valid ranges for month (01–12) and day (01–31), plus a calendar check for the number of days in the month.
-2. Only values that pass validation are converted to the DATE type. The day-first order was confirmed by checking that the day reaches 31 while the month never exceeds 12.
-99.01% of records received a full date and 0.27% a month-level date (assigned to the first day of the month and flagged as approximate, so it is suitable only for monthly or yearly analysis).
-3. Values that match no pattern become NULL with the status UNRECOGNIZED and a reason in order_date_issue. Together with the 629 missing values they make up 0.73% of records, which are excluded only from time-based analysis.
-4. The share was first reported as 0.49% during profiling (1,290 of 260,780 raw records: 629 NULLs and 661 not_a_date). After deduplication and validation it is 0.73% (1,892 of 260,000), because non-existent dates such as 2024-13-40 could be detected only during parsing.
+1. I standardized order_date in a view built on CTEs. Blank values are treated as NULL, and each text value is classified with a strict regular expression that checks the valid ranges for month 01–12 and day 01–31, plus a calendar check for the number of days in the month.
+2. Only values that pass validation are converted __to the DATE type__. The day-first order was confirmed by checking that the day reaches 31 while the month never exceeds 12.
+99.01% of records received a full date and 0.27% a month-level date assigned to the first day of the month and flagged as approximate, so it is suitable only for monthly or yearly analysis.
+3. Values that match no pattern become NULL with the __status UNRECOGNIZED__ and a reason in order_date_issue. Together with the 629 missing values they make up __0.73%__ of records, which are excluded only from time-based analysis.
+4. The share was first reported as 0.49% during profiling 1,290 of 260,780 raw records: 629 NULLs and 661 not_a_date. After deduplication and validation it is 0.73% 1,892 of 260,000, because non-existent dates such as 2024-13-40 could be detected only during parsing.
 
 <img width="1155" height="695" alt="image" src="https://github.com/user-attachments/assets/56620d74-971b-4004-a75e-b50fd6a7aa46" />
 
@@ -327,13 +326,13 @@ FROM date_clean;
 
 ***Explanation of my choices:***
 
-1. Country names were standardized using the CASE statement, which allows multiple variants of the same country name to be mapped to a single, consistent value. This approach is transparent, easy to maintain, and simple to extend with additional mappings when needed, without modifying the source data.
+1. Country names were standardized using the __CASE__ statement, which allows multiple variants of the same country name to be mapped to a single, consistent value. This approach is transparent, easy to maintain, and simple to extend with additional mappings when needed, without modifying the source data.
 
-2. The UPPER() function was used to eliminate inconsistencies related to letter casing. As a result, values such as "Germany", "GERMANY", and "germany" are treated as the same country.
+2. The __UPPER()__ function was used to eliminate inconsistencies related to letter casing. As a result, values such as "Germany", "GERMANY", and "germany" are treated as the same country.
 
-3. The TRIM() function removes leading and trailing spaces from text values. This prevents entries such as "Poland " or " Germany" from being interpreted as separate and distinct records.
+3. The __TRIM()__ function removes leading and trailing spaces from text values. This prevents entries such as "Poland " or " Germany" from being interpreted as separate and distinct records.
 
-4. The ELSE 'UNMAPPED' clause makes it possible to identify values that are not covered by the existing mapping rules. This helps detect data entry errors, misspellings, or new country name variations that should be included in the standardization process. It is a safer approach than assigning unknown values to an existing category, as it reduces the risk of incorrect data classification and improves overall data quality.
+4. The __ELSE 'UNMAPPED'__ clause makes it possible to identify values that are not covered by the existing mapping rules. This helps detect data entry errors, misspellings, or new country name variations that should be included in the standardization process. It is a safer approach than assigning unknown values to an existing category, as it reduces the risk of incorrect data classification and improves overall data quality.
 
 ### DATA STANDARDIZATION - status
 
@@ -359,15 +358,15 @@ FROM clear_country;
 
 ***Explanation of my choices:***
 
-1. The CASE statement was used to standardize the values in the status column. As a result, different variants representing the same order status, such as "SHIP" and "SHIPPED" or "DONE", "COMPLETE", and "COMPLETED", are mapped to a single, consistent category. Standardizing status values improves data quality and ensures more reliable analysis and reporting.
+1. The __CASE__ statement was used to standardize the values in the status column. As a result, different variants representing the same order status, such as "SHIP" and "SHIPPED" or "DONE", "COMPLETE", and "COMPLETED", are mapped to a single, __consistent category__. Standardizing status values improves data quality and ensures more reliable analysis and reporting.
 
-2. The UPPER() function eliminates inconsistencies caused by differences in letter casing, ensuring that values such as "shipped", "Shipped", and "SHIPPED" are treated identically.
+2. The __UPPER()__ function eliminates inconsistencies caused by differences in letter casing, ensuring that values such as "shipped", "Shipped", and "SHIPPED" are treated identically.
 
-3. The TRIM() function removes leading and trailing spaces from text values, preventing entries such as "SHIPPED " or " COMPLETED" from being incorrectly interpreted as separate statuses.
+3. The __TRIM()__ function removes leading and trailing spaces from text values, preventing entries such as "SHIPPED " or " COMPLETED" from being incorrectly interpreted as separate statuses.
 
-4. Using a VIEW allows the transformation to be performed without modifying the source data. This preserves the original dataset while providing users with clean and standardized values for analysis.
+4. Using a __VIEW__ allows the transformation to be performed without modifying the source data. This preserves the original dataset while providing users with clean and standardized values for analysis.
 
-5. The ELSE NULL clause preserves information about statuses that are not covered by the existing mapping rules. This makes it easier to identify unexpected values, misspellings, or new status variants that should be included in the standardization process, rather than incorrectly assigning them to an existing category.
+5. The __ELSE NULL__ clause preserves information about statuses that are not covered by the existing mapping rules. This makes it easier to identify unexpected values, misspellings, or new status variants that should be included in the standardization process, rather than incorrectly assigning them to an existing category.
 
 ### DATA STANDARDIZATION - warehouse_country
 
@@ -389,8 +388,9 @@ SELECT *,
 FROM inventory;
 ```
 
-- I created a view (warehouse_country_cl) with a CASE expression that maps every variant to a single standardized country name.
-- Each value is first normalized with UPPER(TRIM(warehouse_country)), so the mapping does not depend on capitalization or leading/trailing spaces. IN (...) lists group all known variants of a country under one label.
+***Explanation***
+- I created a view warehouse_country_cl with a __CASE__ expression that maps every variant to a single standardized country name.
+- Each value is first normalized with __UPPER(TRIM(warehouse_country))__, so the mapping does not depend on capitalization or leading/trailing spaces. __IN (...)__ lists group all known variants of a country under one label.
 - The original column is kept next to the new clear_country column, so the cleaning stays transparent and auditable, and the raw table is never modified.
 
 
@@ -398,23 +398,23 @@ FROM inventory;
 
 <img width="632" height="461" alt="image" src="https://github.com/user-attachments/assets/5fc28e3c-f2e6-48d0-b933-0010cb6deed3" />
 
-Apart from two groups of values (0 and 608), quantity ranges from 1 to 13 units. Excluding 608, the mean is 3.19 and the standard deviation is 1.50. I examined both groups in the same way, using the order status, the price and the distribution across products, customers, countries and years.
+Apart from two groups of values __0 and 608__, quantity ranges from 1 to 13 units. Excluding 608, the mean is 3.19 and the standard deviation is 1.50. I examined both groups in the same way, using the order status, the price and the distribution across products, customers, countries and years.
 
-quantity = 0 (1,038 records, about 0.40% of rows)
+quantity = 0 __1,038 records, about 0.40% of rows__
 
-1. The order status does not explain these records: the share of cancelled orders among them (5.3%) is close to the rest of the data (6.1%), so they cannot be assumed to be cancellations.
+1. The order status does not explain these records: the share of cancelled orders among them 5.3% is close to the rest of the data 6.1%, so they cannot be assumed to be cancellations.
 2. Their meaning could not be verified. They may represent cancelled or returned items, but also data-entry errors or placeholder values.
 3. They add nothing to revenue, but they distort the order count, the average quantity and the average order value.
-4. They are flagged (is_zero_quantity) and excluded from quantity-based and average-order metrics. They stay in the view, so the decision can be reversed.
+4. They are flagged is_zero_quantity and excluded from quantity-based and average-order metrics. They stay in the view, so the decision can be reversed.
 
-quantity = 608 (1,570 records, 0.60% of rows)
+quantity = 608 __1,570 records, 0.60% of rows__
 
 1. The value lies about 404 standard deviations above the mean of the remaining records, and the next highest quantity is 13.
-2. It appears evenly across 1,152 products, 1,542 customers, all countries and all years, and it does not differ from other orders in price (mean 182.6 vs 183.2) or status (5.2% cancelled vs 6.1%). A genuine bulk order would not be expected to show such a uniform pattern, which points to a placeholder or a data error.
+2. It appears evenly across 1,152 products, 1,542 customers, all countries and all years, and it does not differ from other orders in price mean 182.6 vs 183.2 or status 5.2% cancelled vs 6.1%. A genuine bulk order would not be expected to show such a uniform pattern, which points to a placeholder or a data error.
 3. Inventory does not support orders of this size: the largest stock level in the inventory table is 567 units.
 4. Their impact is substantial: they raise the average quantity from 3.19 to 6.83 and account for 53.6% of all units sold.
 5. In a production environment I would confirm their meaning with the data owner. This was not possible because the dataset is synthetic.
-6. They are flagged (is_quantity_anomaly) and excluded from the final analytical dataset to prevent distortion of business metrics.
+6. They are flagged is_quantity_anomaly and excluded from the final analytical dataset to prevent distortion of business metrics.
 
 ***Solutions:***
 ```
@@ -424,8 +424,9 @@ SELECT *,
        (quantity::int = 608) AS is_quantity_anomaly
 FROM status_cl;
 ```
-
 Both groups are handled consistently: flagged, documented, and never deleted from the source.
+
+***Explanation*** !!!!!!!!!!!!!!!!!!!
 
 ### QUALITY VALIDATION - unit_price
 
@@ -446,15 +447,15 @@ FROM status_cl
 WHERE unit_price !~ '^[0-9]+(\.[0-9]+)?$';
 ```
 
-Data quality validation identified 8 records where the unit_price field contained date values (e.g., "28.mar", "26.kwi") instead of numeric prices. Since the field is intended to store monetary values only, these observations were classified as data entry or import errors and excluded from all price-related analyses.
+Data quality validation identified 8 records where the unit_price field contained date values e.g. __"28.mar", "26.kwi"__ instead of numeric prices. Since the field is intended to store monetary values only, these observations were classified as data entry or import errors and excluded from all price-related analyses.
 
-Root cause: the source CSV was opened and saved in Excel with Polish regional settings, where a dot is read as a date separator. Values such as 24.8 were converted to dates (displayed as 24.sie), so the original number was lost.
+Root cause: the source CSV was opened and saved in Excel with Polish regional settings, where a dot is read as a date separator. Values such as 24.8 were converted to dates displayed as 24.sie, so the original number was lost. I received these data in Excel file so I hadn't another option. 
 
 <img width="335" height="364" alt="image" src="https://github.com/user-attachments/assets/5fcfd473-d4f8-489c-891d-169a1140df72" />
 
 <img width="249" height="562" alt="image" src="https://github.com/user-attachments/assets/ebb33bb3-a6f3-4e35-98d2-4f8518b8881b" /> 
 
-The remaining 1,608 records had a unit price equal to zero. As zero-priced transactions may represent valid business events such as returns, complaints, promotional orders, or missing values, they were investigated separately and retained until their business meaning was verified.
+The remaining __1,608 records__ had a unit price equal to __zero__. As zero-priced transactions may represent valid business events such as returns, complaints, promotional orders, or missing values, they were investigated separately and retained until their business meaning was verified.
 
 I could not identify any relationship between unit_price and either status or quantity. As with the previous anomaly, proper verification would require consultation with the data provider, but this was not possible because the dataset was synthetically generated.
 
@@ -482,6 +483,9 @@ FROM quantity_fl
 ```
 
 <img width="224" height="244" alt="image" src="https://github.com/user-attachments/assets/0a92ea37-2f09-49db-a4f3-4067f4ce6b56" />
+
+***Explanation***
+
 
 ### RECOVERY PROCESS - discount_pct
 
@@ -531,16 +535,16 @@ SELECT *,
 FROM unit_price_cl;
 ```
 
-I created a cleaning view (discount_cl) that keeps the original column and adds discount_pct_clean (numeric, rounded to two decimals) and discount_pct_flag.
-
-After deduplication (260,000 records), a usable discount is available for 190,447 records (73.25%): 26,048 with a discount of 0 and 164,399 with a discount above 0. The remaining 69,553 records (26.75%) are NULL.
-
-Discounts are used only for records with a documented value, selected by the flag. Results based on discounts are reported for this subset (73.25%) and not for all orders.
+***Explanation***
+1. I created a cleaning view discount_cl that keeps the original column and adds discount_pct_clean numeric, rounded to two decimals and discount_pct_flag.
+2. After deduplication 260,000 records, a usable discount is available for 190,447 records 73.25%: 26,048 with a discount of 0 and 164,399 with a discount above 0. The remaining __69,553 records 26.75% are NULL__.
+3. Discounts are used only for records with a documented value, selected by the flag. __Results based on discounts__ are reported for this __subset 73.25%__ and not for all orders.
 
 <img width="684" height="158" alt="image" src="https://github.com/user-attachments/assets/18d21cf1-f87d-4532-bee8-8b21701d3a9e" />
 
 
-***The data has been cleaned and is ready for analysis. The sample below shows what it looks like after cleaning.***
+<h2 align="center">The data has been cleaned and is ready for analysis. The sample below shows what it looks like after cleaning.</h2>
+
 
 <img width="1164" height="548" alt="image" src="https://github.com/user-attachments/assets/47993d2a-68b0-4215-99a8-3b538fb08eca" />
 
