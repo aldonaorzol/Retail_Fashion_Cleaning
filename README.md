@@ -281,6 +281,7 @@ The country column contained multiple representations of the same country, inclu
 
 As a result, grouping or aggregating data by country would produce fragmented results, where one country could be counted as several separate categories. To improve data quality and ensure accurate analysis, the country values had to be normalized into a unified format.
 
+Before:
 <img width="619" height="583" alt="image" src="https://github.com/user-attachments/assets/cdbffa8e-cf31-468e-b8a2-8e8a7621857f" />
 
 <img width="162" height="532" alt="image" src="https://github.com/user-attachments/assets/9a0fd34b-43cd-410b-b493-e0a986a588fe" />
@@ -305,7 +306,11 @@ SELECT *,
     END AS clear_country
 FROM date_clean;
 ```
+
+After:
+
 <img width="173" height="293" alt="image" src="https://github.com/user-attachments/assets/6ae65975-952f-45f7-9969-91509b7430a9" />
+
 
 ***Explanation of the Solution:***
 
@@ -325,6 +330,7 @@ The status column lacked standardization and contained multiple textual represen
 
 Without standardization, aggregations based on order status would produce duplicated categories and distorted analytical results. Therefore, a data-cleaning step was required to normalize status values into a consistent and analysis-ready format.
 
+Before:
 <img width="643" height="628" alt="image" src="https://github.com/user-attachments/assets/c20692a3-a971-4157-af09-757b73a1ede2" />
 
 <img width="223" height="322" alt="image" src="https://github.com/user-attachments/assets/f2dfa72e-d543-4044-b1f4-802af4924099" />
@@ -342,6 +348,8 @@ SELECT *,
     END AS status_cl
 FROM clear_country;
 ```
+
+After:
 
 <img width="146" height="120" alt="image" src="https://github.com/user-attachments/assets/80682117-55bd-4a49-be65-2e308c620541" />
 
@@ -363,6 +371,8 @@ FROM clear_country;
 
 The warehouse_country column lacked standardization and contained multiple variations of the same country, including ISO codes, abbreviations, local-language names, and full country names. As a result, inventory records belonging to the same country could be split across multiple categories, leading to inaccurate aggregations and reporting. A data-cleaning step was required to normalize the values into a consistent and analysis-ready format.
 
+Before:
+
 <img width="429" height="520" alt="image" src="https://github.com/user-attachments/assets/af185b36-f0e3-4d06-81c1-29414620ddc2" />
 
 <img width="198" height="440" alt="image" src="https://github.com/user-attachments/assets/d22f64d5-227f-4d51-aa05-2d5c2d132cd3" />
@@ -380,6 +390,10 @@ SELECT *,
     END AS warehouse_country_cl
 FROM inventory;
 ```
+
+After:
+
+<img width="610" height="416" alt="image" src="https://github.com/user-attachments/assets/7b7d22f1-9c15-4a77-9992-7084e0912a54" />
 
 ***Explanation of the Solution:***
 - I created a view warehouse_country_cl with a __CASE__ expression that maps every variant to a single standardized country name.
@@ -408,7 +422,10 @@ quantity = 608 __1,570 records, 0.60% of rows__
 4. Their impact is substantial: they raise the average quantity from 3.19 to 6.83 and account for 53.6% of all units sold.
 5. In a production environment I would confirm their meaning with the data owner. This was not possible because the dataset is synthetic.
 6. They are flagged is_quantity_anomaly and excluded from the final analytical dataset to prevent distortion of business metrics.
-   
+
+
+Before:
+
 <img width="632" height="461" alt="image" src="https://github.com/user-attachments/assets/5fc28e3c-f2e6-48d0-b933-0010cb6deed3" />
 
 ***Solutions:***
@@ -419,7 +436,10 @@ SELECT *,
        (quantity::int = 608) AS is_quantity_anomaly
 FROM status_cl;
 ```
-Both groups are handled consistently: flagged, documented, and never deleted from the source.
+
+After:
+
+<img width="328" height="348" alt="image" src="https://github.com/user-attachments/assets/c1a331a7-e382-4944-9fa6-1d731559cff1" />
 
 ***Explanation of the Solution:***
 1. The expression __quantity::int = 0__ creates the is_zero_quantity flag. Records with a quantity equal to zero are identified because their business meaning cannot be verified. Although they do not contribute to revenue, they can distort metrics such as order count, average quantity, and average order value.
@@ -444,6 +464,8 @@ Both groups of records are handled consistently: they are identified, documented
 - 1,608 records had a price equal to 0. Unlike the date values, zero-priced transactions may represent valid business events e.g., freebies or promotions and therefore could not be automatically classified as errors.
 
 Before analysis, it was necessary to distinguish between corrupted price values and potentially valid zero-priced transactions to prevent distortions in revenue and price-based metrics while preserving data transparency.
+
+Before:
 
 <img width="148" height="421" alt="image" src="https://github.com/user-attachments/assets/892790d7-d3fe-4dc5-87b0-2b2155427965" />
 
@@ -515,8 +537,6 @@ FROM quantity_fl
 
 ### RECOVERY PROCESS - discount_pct
 
-<img width="862" height="721" alt="image" src="https://github.com/user-attachments/assets/166ba157-e352-4614-b5da-a0f8b01cc747" />
-
 ***Problem:***
 The discount_pct column was stored as text and contained several data quality issues. Profiling showed five types of values:
 - correctly stored __numbers__ e.g. 0.0, 13.84: __44.70%__,
@@ -528,6 +548,10 @@ Altogether, only __45.10%__ of the values were stored as numbers.
 
 Root cause
 The source file had been opened and saved in Excel with Polish regional settings, where a dot is read as a date separator. Discounts such as 7.41 were converted to dates (displayed as lip.41), and values such as 1.6 to 01.cze. A simulation of this conversion on the original file reproduced the observed shares (42.96% vs 42.88% in the database), which confirms the explanation.
+
+Before:
+
+<img width="862" height="721" alt="image" src="https://github.com/user-attachments/assets/166ba157-e352-4614-b5da-a0f8b01cc747" />
 
 ***Solutions:***
 
@@ -557,12 +581,14 @@ SELECT *,
 FROM unit_price_cl;
 ```
 
+After:
+
+<img width="387" height="546" alt="image" src="https://github.com/user-attachments/assets/14c59842-738b-46ac-9e4c-7d8f28ec148c" />
+
 ***Results:***
 1. I created a cleaning view discount_cl that keeps the original column and adds discount_pct_clean numeric, rounded to two decimals and discount_pct_flag.
 2. After deduplication 260,000 records, a usable discount is available for 190,447 records 73.25%: 26,048 with a discount of 0 and 164,399 with a discount above 0. The remaining __69,553 records 26.75% are NULL__.
 3. Discounts are used only for records with a documented value, selected by the flag. __Results based on discounts__ are reported for this __subset 73.25%__ and not for all orders.
-
-<img width="684" height="158" alt="image" src="https://github.com/user-attachments/assets/18d21cf1-f87d-4532-bee8-8b21701d3a9e" />
 
 ***Explanation of the Solution:***
 1. __CASE__ handles each type of value with its own rule.The conditions are checked in a fixed order, and only the result expression of the matching branch is evaluated. A text value is therefore cast to numeric only after it has passed the matching pattern, so invalid values cannot break the view. Anything unexpected falls into ELSE and is not silently converted.
