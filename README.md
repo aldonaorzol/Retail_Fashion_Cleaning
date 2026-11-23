@@ -608,7 +608,7 @@ Why not a simpler approach? Casting the column directly would raise an error on 
 
 ### The data has been cleaned and is ready for analysis.
 
-
+<img width="1384" height="666" alt="image" src="https://github.com/user-attachments/assets/f43ba086-d331-4f6f-8bbd-e22fe78e1746" />
 
 <img width="362" height="667" alt="image" src="https://github.com/user-attachments/assets/c9f41034-bfaf-4758-b9ce-985d807172d6" />
 
